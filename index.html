@@ -36,6 +36,7 @@
             border-radius: 5px;
             z-index: 1000;
             transition: background-color 0.3s, transform 0.3s;
+            transition: left 0.5s ease;
         }
 
         .menu-btn:hover {
@@ -52,11 +53,8 @@
             color: white;
             display: flex;
             flex-direction: column;
-            align-items: center;
-            padding-top: 20px;
             transition: left 0.5s ease;
             z-index: 999;
-            overflow-y: auto;
         }
 
         .sidebar a {
@@ -72,6 +70,41 @@
 
         .sidebar a:hover {
             background-color: #555;
+        }
+
+        /* 隱藏時撥放器透明 */
+        .sidebar.hide #music-player {
+            opacity: 0;
+            pointer-events: none;
+        }
+
+        #album-list {
+            flex: 1;
+            width: 100%;
+            overflow-y: auto;
+            overflow-x: hidden;         /* ❌ 禁止橫向滾動 */
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+
+        #album-list a {
+            color: white;
+            text-decoration: none;
+            padding: 10px;
+            width: 100%;
+            text-align: center;
+            border-bottom: 1px solid #444;
+            transition: background-color 0.3s;
+        }
+
+        #album-list a:hover {
+            background-color: #555;
+        }
+
+        #music-player {
+            width: 100%;
+            height: 150px;
         }
 
         .gallery {
@@ -112,23 +145,19 @@
 
     <h1>Welcome to My Photo Album</h1>
 
-    <!-- 🔊 隱藏的 YouTube 背景音樂播放器 -->
-    <div id="music-player" style="width: 0; height: 0; overflow: hidden;"></div>
-
-    <!-- 側邊欄控制按鈕 -->
     <button class="menu-btn" id="toggleBtn" onclick="toggleSidebar()">&#x3E;</button>
 
-    <!-- 側邊選單 -->
-    <div class="sidebar" id="sidebar">
-        <!-- 相簿選項會動態加載 -->
+    <div class="sidebar hide" id="sidebar">
+        <!-- 動態相簿選單 -->
+        <div id="album-list"></div>
+
+        <!-- 撥放器 -->
+        <div id="music-player"></div>
     </div>
 
-    <!-- 圖片展示區 -->
     <div class="gallery" id="gallery"></div>
 
-    <!-- HEIC 支援 -->
     <script src="https://cdn.jsdelivr.net/npm/heic2any@latest/dist/heic2any.bundle.js"></script>
-    <!-- YouTube 播放器 API -->
     <script src="https://www.youtube.com/iframe_api"></script>
 
     <script>
@@ -138,17 +167,12 @@
 
         function loadAlbum(albumName) {
             folderPath = albumName;
-            console.log(`Loading album: ${folderPath}`);
             loadImages();
         }
 
         function loadImages() {
-            if (folderPath === "images") {
-                folderPath = "images";
-            } else {
-                folderPath = `images/${folderPath}`;
-            }
-            const apiUrl = `https://api.github.com/repos/${repoOwner}/${repoName}/contents/${folderPath}`;
+            const path = folderPath === 'images' ? 'images' : `images/${folderPath}`;
+            const apiUrl = `https://api.github.com/repos/${repoOwner}/${repoName}/contents/${path}`;
 
             fetch(apiUrl)
                 .then(response => response.json())
@@ -171,9 +195,6 @@
                                         heic2any({ blob: blob, toType: 'image/jpeg' })
                                             .then(convertedBlob => {
                                                 img.src = URL.createObjectURL(convertedBlob);
-                                            })
-                                            .catch(error => {
-                                                console.error('Error converting HEIC file:', error);
                                             });
                                     });
                             } else {
@@ -184,33 +205,17 @@
                             gallery.appendChild(photoDiv);
                         }
                     });
-                })
-                .catch(error => {
-                    console.error('Error fetching files from GitHub API:', error);
                 });
         }
 
-        function toggleSidebar() {
-            const sidebar = document.getElementById('sidebar');
-            const button = document.getElementById('toggleBtn');
-
-            if (sidebar.style.left === '0px') {
-                sidebar.style.left = '-250px';
-                button.innerHTML = '&#x3E;';
-            } else {
-                sidebar.style.left = '0px';
-                button.innerHTML = '&#x3C;';
-            }
-        }
-
         function loadAlbums() {
-            const apiUrl = `https://api.github.com/repos/${repoOwner}/${repoName}/contents/${folderPath}`;
+            const apiUrl = `https://api.github.com/repos/${repoOwner}/${repoName}/contents/images`;
 
             fetch(apiUrl)
                 .then(response => response.json())
                 .then(data => {
-                    const sidebar = document.getElementById('sidebar');
-                    sidebar.innerHTML = '';
+                    const albumList = document.getElementById('album-list');
+                    albumList.innerHTML = '';
 
                     data.forEach(item => {
                         if (item.type === 'dir') {
@@ -220,13 +225,27 @@
                             albumLink.onclick = function () {
                                 loadAlbum(item.name);
                             };
-                            sidebar.appendChild(albumLink);
+                            albumList.appendChild(albumLink);
                         }
                     });
-                })
-                .catch(error => {
-                    console.error('Error fetching folders from GitHub API:', error);
                 });
+        }
+
+        function toggleSidebar() {
+            const sidebar = document.getElementById('sidebar');
+            const button = document.getElementById('toggleBtn');
+
+            if (sidebar.style.left === '0px') {
+                sidebar.style.left = '-250px';
+                sidebar.classList.add('hide');
+                button.innerHTML = '&#x3E;';
+                button.style.left = '20px';
+            } else {
+                sidebar.style.left = '0px';
+                sidebar.classList.remove('hide');
+                button.innerHTML = '&#x3C;';
+                button.style.left = '230px';
+            }
         }
 
         window.onload = function () {
@@ -234,19 +253,19 @@
             loadAlbum('images');
         };
 
-        // YouTube 播放器 API 初始化
+        // YouTube Player
         let player;
         function onYouTubeIframeAPIReady() {
             player = new YT.Player('music-player', {
-                height: '0',
-                width: '0',
-                videoId: 'kaiTMtspyIk', // 播放清單的第一首影片
+                height: '150',
+                width: '220',
+                videoId: 'kaiTMtspyIk',
                 playerVars: {
                     listType: 'playlist',
                     list: 'PLAVG7PECd7A0D9SdtL6QW94W41D3uzVtz',
                     autoplay: 1,
                     loop: 1,
-                    controls: 0,
+                    controls: 1,
                     modestbranding: 1
                 },
                 events: {
