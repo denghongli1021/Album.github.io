@@ -112,24 +112,24 @@
 
     <h1>Welcome to My Photo Album</h1>
 
-    <!-- YouTube Music 播放清單 -->
-    <div style="margin-top: 20px;">
-        <iframe width="560" height="315"
-            src="https://www.youtube.com/embed/videoseries?list=PLAVG7PECd7A0D9SdtL6QW94W41D3uzVtz" frameborder="0"
-            allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
-            allowfullscreen>
-        </iframe>
-    </div>
+    <!-- 🔊 隱藏的 YouTube 背景音樂播放器 -->
+    <div id="music-player" style="width: 0; height: 0; overflow: hidden;"></div>
 
+    <!-- 側邊欄控制按鈕 -->
     <button class="menu-btn" id="toggleBtn" onclick="toggleSidebar()">&#x3E;</button>
 
+    <!-- 側邊選單 -->
     <div class="sidebar" id="sidebar">
-        <!-- 相簿選單會動態加載 -->
+        <!-- 相簿選項會動態加載 -->
     </div>
 
+    <!-- 圖片展示區 -->
     <div class="gallery" id="gallery"></div>
 
+    <!-- HEIC 支援 -->
     <script src="https://cdn.jsdelivr.net/npm/heic2any@latest/dist/heic2any.bundle.js"></script>
+    <!-- YouTube 播放器 API -->
+    <script src="https://www.youtube.com/iframe_api"></script>
 
     <script>
         const repoOwner = 'denghongli1021';
@@ -143,7 +143,7 @@
         }
 
         function loadImages() {
-            if (folderPath == "images") {
+            if (folderPath === "images") {
                 folderPath = "images";
             } else {
                 folderPath = `images/${folderPath}`;
@@ -232,6 +232,29 @@
         window.onload = function () {
             loadAlbums();
             loadAlbum('images');
+        };
+
+        // YouTube 播放器 API 初始化
+        let player;
+        function onYouTubeIframeAPIReady() {
+            player = new YT.Player('music-player', {
+                height: '0',
+                width: '0',
+                videoId: 'kaiTMtspyIk', // 播放清單的第一首影片
+                playerVars: {
+                    listType: 'playlist',
+                    list: 'PLAVG7PECd7A0D9SdtL6QW94W41D3uzVtz',
+                    autoplay: 1,
+                    loop: 1,
+                    controls: 0,
+                    modestbranding: 1
+                },
+                events: {
+                    onReady: function (event) {
+                        event.target.playVideo();
+                    }
+                }
+            });
         }
     </script>
 
