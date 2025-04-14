@@ -271,7 +271,9 @@
                 },
                 events: {
                     onReady: function (event) {
-                        event.target.playVideo();
+                        event.target.setShuffle(true);  // ✅ 啟用隨機
+                        event.target.nextVideo();       // ✅ 馬上下一首
+                        event.target.playVideo();       // 播放
                     }
                 }
             });
