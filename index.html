@@ -123,20 +123,7 @@
 
     <!-- 側邊選單 -->
     <div class="sidebar" id="sidebar">
-        <a href="#" onclick="loadAlbum('album1')">Album 1</a>
-        <a href="#" onclick="loadAlbum('album2')">Album 2</a>
-        <a href="#" onclick="loadAlbum('album3')">Album 3</a>
-        <a href="#" onclick="loadAlbum('album4')">Album 4</a>
-        <a href="#" onclick="loadAlbum('album4')">Album 4</a>
-        <a href="#" onclick="loadAlbum('album4')">Album 4</a>
-        <a href="#" onclick="loadAlbum('album4')">Album 4</a>
-        <a href="#" onclick="loadAlbum('album4')">Album 4</a>
-        <a href="#" onclick="loadAlbum('album4')">Album 4</a>
-        <a href="#" onclick="loadAlbum('album4')">Album 4</a>
-        <a href="#" onclick="loadAlbum('album4')">Album 4</a>
-        <a href="#" onclick="loadAlbum('album4')">Album 4</a>
-        <a href="#" onclick="loadAlbum('album4')">Album 4</a>
-        <a href="#" onclick="loadAlbum('album4')">Album 4</a>
+        <!-- 相簿選項會動態加載 -->
     </div>
 
     <!-- 圖片展示區域 -->
@@ -148,16 +135,42 @@
         const repoName = 'Album.github.io'; // 請替換為你的儲存庫名稱
         let folderPath = 'images'; // 預設的圖片資料夾名稱
 
-        // 加載指定的相簿
-        function loadAlbum(albumName) {
-            // 更新資料夾路徑
-            folderPath = albumName;
-            console.log(`Loading album: ${folderPath}`);
-            // 更新圖片庫
-            loadImages();
+        // 加載 GitHub 上的相簿（資料夾）
+        function loadAlbums() {
+            const apiUrl = `https://api.github.com/repos/${repoOwner}/${repoName}/contents/${folderPath}`;
+
+            fetch(apiUrl)
+                .then(response => response.json())
+                .then(data => {
+                    const sidebar = document.getElementById('sidebar');
+                    sidebar.innerHTML = ''; // 清空現有的相簿選項
+
+                    // 遍歷 API 回應，過濾出資料夾並添加到側邊選單
+                    data.forEach(item => {
+                        if (item.type === 'dir') {
+                            const albumLink = document.createElement('a');
+                            albumLink.href = '#';
+                            albumLink.textContent = item.name;
+                            albumLink.onclick = function () {
+                                loadAlbum(item.name); // 當點擊相簿時加載相簿中的圖片
+                            };
+                            sidebar.appendChild(albumLink);
+                        }
+                    });
+                })
+                .catch(error => {
+                    console.error('Error fetching folders from GitHub API:', error);
+                });
         }
 
-        // 這是 GitHub API 用來列出儲存庫中某個資料夾的檔案
+        // 加載指定相簿中的圖片
+        function loadAlbum(albumName) {
+            folderPath = albumName; // 更新為選中的資料夾
+            console.log(`Loading album: ${folderPath}`);
+            loadImages(); // 更新圖片庫
+        }
+
+        // 從 GitHub API 加載圖片
         function loadImages() {
             const apiUrl = `https://api.github.com/repos/${repoOwner}/${repoName}/contents/${folderPath}`;
 
@@ -205,9 +218,10 @@
             }
         }
 
-        // 頁面加載時預設加載 Album 1
+        // 頁面加載時預設加載相簿
         window.onload = function () {
-            loadAlbum('images');
+            loadAlbums(); // 加載相簿列表
+            loadAlbum('images'); // 加載 'images' 資料夾中的圖片作為預設
         }
     </script>
 
