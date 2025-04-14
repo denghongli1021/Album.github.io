@@ -5,15 +5,211 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>My Photo Album</title>
-    <link rel="stylesheet" href="styles.css">
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #f0f0f0;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            flex-direction: column;
+            margin: 0;
+            height: 100vh;
+            box-sizing: border-box;
+            position: relative;
+        }
+
+        h1 {
+            color: #333;
+        }
+
+        /* 按鈕來控制側邊選單的顯示 */
+        .menu-btn {
+            position: fixed;
+            top: 20px;
+            left: 20px;
+            background-color: #333;
+            color: white;
+            border: none;
+            padding: 15px;
+            font-size: 16px;
+            cursor: pointer;
+            border-radius: 5px;
+            z-index: 1000;
+            transition: background-color 0.3s, transform 0.3s;
+        }
+
+        .menu-btn:hover {
+            background-color: #555;
+        }
+
+        /* 側邊選單 */
+        .sidebar {
+            position: fixed;
+            top: 0;
+            left: -250px;
+            /* 初始隱藏在左側 */
+            width: 220px;
+            height: 100%;
+            background-color: #333;
+            color: white;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            padding-top: 20px;
+            transition: left 0.5s ease;
+            /* 使側邊選單滑動 */
+            z-index: 999;
+            overflow-y: auto;
+            /* 允許縱向滾動 */
+        }
+
+        .sidebar a {
+            color: white;
+            text-decoration: none;
+            margin: 10px 0;
+            padding: 10px;
+            width: 100%;
+            text-align: center;
+            transition: background-color 0.3s;
+            border-bottom: 1px solid #444;
+        }
+
+        .sidebar a:hover {
+            background-color: #555;
+        }
+
+        /* 圖片展示區域 */
+        .gallery {
+            display: flex;
+            flex-wrap: wrap;
+            justify-content: center;
+            width: 100%;
+            max-width: 100vw;
+            padding: 20px;
+            overflow: auto;
+            box-sizing: border-box;
+            max-height: 80vh;
+        }
+
+        .photo {
+            width: 250px;
+            height: 250px;
+            margin: 15px;
+            border: 2px solid #ccc;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+            overflow: hidden;
+            transition: transform 0.2s;
+        }
+
+        .photo img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+
+        .photo:hover {
+            transform: scale(1.05);
+        }
+    </style>
 </head>
 
 <body>
 
     <h1>Welcome to My Photo Album</h1>
+
+    <!-- 按鈕來顯示和隱藏選單 -->
+    <button class="menu-btn" id="toggleBtn" onclick="toggleSidebar()">&#x3E;</button>
+
+    <!-- 側邊選單 -->
+    <div class="sidebar" id="sidebar">
+        <a href="#" onclick="loadAlbum('album1')">Album 1</a>
+        <a href="#" onclick="loadAlbum('album2')">Album 2</a>
+        <a href="#" onclick="loadAlbum('album3')">Album 3</a>
+        <a href="#" onclick="loadAlbum('album4')">Album 4</a>
+        <a href="#" onclick="loadAlbum('album4')">Album 4</a>
+        <a href="#" onclick="loadAlbum('album4')">Album 4</a>
+        <a href="#" onclick="loadAlbum('album4')">Album 4</a>
+        <a href="#" onclick="loadAlbum('album4')">Album 4</a>
+        <a href="#" onclick="loadAlbum('album4')">Album 4</a>
+        <a href="#" onclick="loadAlbum('album4')">Album 4</a>
+        <a href="#" onclick="loadAlbum('album4')">Album 4</a>
+        <a href="#" onclick="loadAlbum('album4')">Album 4</a>
+        <a href="#" onclick="loadAlbum('album4')">Album 4</a>
+        <a href="#" onclick="loadAlbum('album4')">Album 4</a>
+    </div>
+
+    <!-- 圖片展示區域 -->
     <div class="gallery" id="gallery"></div>
 
-    <script src="script.js"></script>
+    <script>
+        // 設定 GitHub API URL
+        const repoOwner = 'denghongli1021'; // 請替換為你的 GitHub 用戶名
+        const repoName = 'Album.github.io'; // 請替換為你的儲存庫名稱
+        let folderPath = 'images'; // 預設的圖片資料夾名稱
+
+        // 加載指定的相簿
+        function loadAlbum(albumName) {
+            // 更新資料夾路徑
+            folderPath = albumName;
+            console.log(`Loading album: ${folderPath}`);
+            // 更新圖片庫
+            loadImages();
+        }
+
+        // 這是 GitHub API 用來列出儲存庫中某個資料夾的檔案
+        function loadImages() {
+            const apiUrl = `https://api.github.com/repos/${repoOwner}/${repoName}/contents/${folderPath}`;
+
+            fetch(apiUrl)
+                .then(response => response.json())
+                .then(data => {
+                    const gallery = document.getElementById('gallery');
+                    gallery.innerHTML = ''; // 清空現有的圖片
+
+                    // 遍歷 API 回應並將圖片顯示在網頁上
+                    data.forEach(file => {
+                        if (file.type === 'file' && file.name.match(/\.(jpg|jpeg|png|gif)$/)) {
+                            const photoDiv = document.createElement('div');
+                            photoDiv.classList.add('photo');
+
+                            const img = document.createElement('img');
+                            img.src = file.download_url; // 下載圖片的 URL
+                            img.alt = file.name;
+
+                            // 測試下載 URL 是否正確
+                            console.log('Downloading:', file.name, 'URL:', file.download_url);
+
+                            photoDiv.appendChild(img);
+                            gallery.appendChild(photoDiv);
+                        }
+                    });
+                })
+                .catch(error => {
+                    console.error('Error fetching files from GitHub API:', error);
+                });
+        }
+
+        // 切換側邊選單顯示與隱藏
+        function toggleSidebar() {
+            const sidebar = document.getElementById('sidebar');
+            const button = document.getElementById('toggleBtn');
+
+            // 判斷選單是否顯示
+            if (sidebar.style.left === '0px') {
+                sidebar.style.left = '-250px'; // 隱藏選單
+                button.innerHTML = '&#x3E;'; // 更改按鈕顯示為 <
+            } else {
+                sidebar.style.left = '0px'; // 顯示選單
+                button.innerHTML = '&#x3C;'; // 更改按鈕顯示為 >
+            }
+        }
+
+        // 頁面加載時預設加載 Album 1
+        window.onload = function () {
+            loadAlbum('images');
+        }
+    </script>
 
 </body>
 
