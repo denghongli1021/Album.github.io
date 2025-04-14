@@ -131,104 +131,122 @@
 
     <script>
         // 設定 GitHub API URL
-        const repoOwner = 'denghongli1021'; // 請替換為你的 GitHub 用戶名
-        const repoName = 'Album.github.io'; // 請替換為你的儲存庫名稱
-        let folderPath = 'images'; // 預設的圖片資料夾名稱
+            const repoOwner = 'denghongli1021'; // 請替換為你的 GitHub 用戶名
+            const repoName = 'Album.github.io'; // 請替換為你的儲存庫名稱
+            let folderPath = 'images'; // 預設的圖片資料夾名稱
 
-        // 加載 GitHub 上的相簿（資料夾）
-        function loadAlbums() {
-            const apiUrl = `https://api.github.com/repos/${repoOwner}/${repoName}/contents/${folderPath}`;
-
-            fetch(apiUrl)
-                .then(response => response.json())
-                .then(data => {
-                    const sidebar = document.getElementById('sidebar');
-                    sidebar.innerHTML = ''; // 清空現有的相簿選項
-
-                    // 遍歷 API 回應，過濾出資料夾並添加到側邊選單
-                    data.forEach(item => {
-                        if (item.type === 'dir') {
-                            const albumLink = document.createElement('a');
-                            albumLink.href = '#';
-                            albumLink.textContent = item.name;
-                            albumLink.onclick = function () {
-                                loadAlbum(item.name); // 當點擊相簿時加載相簿中的圖片
-                            };
-                            sidebar.appendChild(albumLink);
-                        }
-                    });
-                })
-                .catch(error => {
-                    console.error('Error fetching folders from GitHub API:', error);
-                });
-        }
-
-        // 加載指定相簿中的圖片
-        function loadAlbum(albumName) {
-            folderPath = albumName; // 更新為選中的資料夾
-            console.log(`Loading album: ${folderPath}`);
-            loadImages(); // 更新圖片庫
-        }
-
-        // 從 GitHub API 加載圖片
-        function loadImages() {
-            if (folderPath == "images") {
-                folderPath = "images"; // 預設資料夾
-            } else {
-                folderPath = `images/${folderPath}`; // 更新為選中的資料夾
+            // 加載指定相簿中的圖片
+            function loadAlbum(albumName) {
+                folderPath = albumName; // 更新為選中的資料夾
+                console.log(`Loading album: ${folderPath}`);
+                loadImages(); // 更新圖片庫
             }
-            const apiUrl = `https://api.github.com/repos/${repoOwner}/${repoName}/contents/${folderPath}`;
 
-            fetch(apiUrl)
-                .then(response => response.json())
-                .then(data => {
-                    const gallery = document.getElementById('gallery');
-                    gallery.innerHTML = ''; // 清空現有的圖片
+            // 從 GitHub API 加載圖片
+            function loadImages() {
+                if (folderPath == "images") {
+                    folderPath = "images"; // 預設資料夾
+                } else {
+                    folderPath = `images/${folderPath}`; // 更新為選中的資料夾
+                }
+                const apiUrl = `https://api.github.com/repos/${repoOwner}/${repoName}/contents/${folderPath}`;
 
-                    // 遍歷 API 回應並將圖片顯示在網頁上
-                    data.forEach(file => {
-                        if (file.type === 'file' && file.name.match(/\.(jpg|jpeg|png|gif)$/)) {
-                            const photoDiv = document.createElement('div');
-                            photoDiv.classList.add('photo');
+                fetch(apiUrl)
+                    .then(response => response.json())
+                    .then(data => {
+                        const gallery = document.getElementById('gallery');
+                        gallery.innerHTML = ''; // 清空現有的圖片
 
-                            const img = document.createElement('img');
-                            img.src = file.download_url; // 下載圖片的 URL
-                            img.alt = file.name;
+                        // 遍歷 API 回應並將圖片顯示在網頁上
+                        data.forEach(file => {
+                            if (file.type === 'file' && file.name.match(/\.(jpg|jpeg|png|gif|heic|heif)$/i)) {
+                                const photoDiv = document.createElement('div');
+                                photoDiv.classList.add('photo');
 
-                            // 測試下載 URL 是否正確
-                            console.log('Downloading:', file.name, 'URL:', file.download_url);
+                                const img = document.createElement('img');
+                                img.alt = file.name;
 
-                            photoDiv.appendChild(img);
-                            gallery.appendChild(photoDiv);
-                        }
+                                // 如果是 HEIC 文件，使用 heic2any 進行轉換
+                                if (file.name.match(/\.(heic|heif)$/i)) {
+                                    fetch(file.download_url)
+                                        .then(response => response.blob())
+                                        .then(blob => {
+                                            // 使用 heic2any 來轉換 HEIC 檔案
+                                            heic2any({ blob: blob, toType: 'image/jpeg' })
+                                                .then(convertedBlob => {
+                                                    // 顯示轉換後的圖片
+                                                    img.src = URL.createObjectURL(convertedBlob);
+                                                })
+                                                .catch(error => {
+                                                    console.error('Error converting HEIC file:', error);
+                                                });
+                                        });
+                                } else {
+                                    // 非 HEIC 檔案直接顯示
+                                    img.src = file.download_url;
+                                }
+
+                                photoDiv.appendChild(img);
+                                gallery.appendChild(photoDiv);
+                            }
+                        });
+                    })
+                    .catch(error => {
+                        console.error('Error fetching files from GitHub API:', error);
                     });
-                })
-                .catch(error => {
-                    console.error('Error fetching files from GitHub API:', error);
-                });
-        }
-
-        // 切換側邊選單顯示與隱藏
-        function toggleSidebar() {
-            const sidebar = document.getElementById('sidebar');
-            const button = document.getElementById('toggleBtn');
-
-            // 判斷選單是否顯示
-            if (sidebar.style.left === '0px') {
-                sidebar.style.left = '-250px'; // 隱藏選單
-                button.innerHTML = '&#x3E;'; // 更改按鈕顯示為 <
-            } else {
-                sidebar.style.left = '0px'; // 顯示選單
-                button.innerHTML = '&#x3C;'; // 更改按鈕顯示為 >
             }
-        }
 
-        // 頁面加載時預設加載相簿
-        window.onload = function () {
-            loadAlbums(); // 加載相簿列表
-            loadAlbum('images'); // 加載 'images' 資料夾中的圖片作為預設
-        }
+            // 切換側邊選單顯示與隱藏
+            function toggleSidebar() {
+                const sidebar = document.getElementById('sidebar');
+                const button = document.getElementById('toggleBtn');
+
+                // 判斷選單是否顯示
+                if (sidebar.style.left === '0px') {
+                    sidebar.style.left = '-250px'; // 隱藏選單
+                    button.innerHTML = '&#x3E;'; // 更改按鈕顯示為 <
+                } else {
+                    sidebar.style.left = '0px'; // 顯示選單
+                    button.innerHTML = '&#x3C;'; // 更改按鈕顯示為 >
+                }
+            }
+
+            // 頁面加載時預設加載相簿
+            window.onload = function () {
+                loadAlbums(); // 加載相簿列表
+                loadAlbum('images'); // 加載 'images' 資料夾中的圖片作為預設
+            }
+
+            // 加載 GitHub 上的相簿（資料夾）
+            function loadAlbums() {
+                const apiUrl = `https://api.github.com/repos/${repoOwner}/${repoName}/contents/${folderPath}`;
+
+                fetch(apiUrl)
+                    .then(response => response.json())
+                    .then(data => {
+                        const sidebar = document.getElementById('sidebar');
+                        sidebar.innerHTML = ''; // 清空現有的相簿選項
+
+                        // 遍歷 API 回應，過濾出資料夾並添加到側邊選單
+                        data.forEach(item => {
+                            if (item.type === 'dir') {
+                                const albumLink = document.createElement('a');
+                                albumLink.href = '#';
+                                albumLink.textContent = item.name;
+                                albumLink.onclick = function () {
+                                    loadAlbum(item.name); // 當點擊相簿時加載相簿中的圖片
+                                };
+                                sidebar.appendChild(albumLink);
+                            }
+                        });
+                    })
+                    .catch(error => {
+                        console.error('Error fetching folders from GitHub API:', error);
+                    });
+            }
+
     </script>
+    <script src="https://cdn.jsdelivr.net/npm/heic2any@latest/dist/heic2any.bundle.js"></script>
 
 </body>
 
