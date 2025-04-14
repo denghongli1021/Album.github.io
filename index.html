@@ -76,6 +76,9 @@
                         img.src = file.download_url; // 下載圖片的 URL
                         img.alt = file.name;
 
+                        // 測試下載 URL 是否正確
+                        console.log('Downloading:', file.name, 'URL:', file.download_url);
+
                         photoDiv.appendChild(img);
                         gallery.appendChild(photoDiv);
                     }
