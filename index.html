@@ -172,6 +172,11 @@
 
         // 從 GitHub API 加載圖片
         function loadImages() {
+            if (folderPath == "images") {
+                folderPath = "images"; // 預設資料夾
+            } else {
+                folderPath = `images/${folderPath}`; // 更新為選中的資料夾
+            }
             const apiUrl = `https://api.github.com/repos/${repoOwner}/${repoName}/contents/${folderPath}`;
 
             fetch(apiUrl)
