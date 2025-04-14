@@ -231,7 +231,7 @@
                         data.forEach(item => {
                             if (item.type === 'dir') {
                                 const albumLink = document.createElement('a');
-                                albumLink.href = '#';
+                                albumLink.href = item.name;
                                 albumLink.textContent = item.name;
                                 albumLink.onclick = function () {
                                     loadAlbum(item.name); // 當點擊相簿時加載相簿中的圖片
