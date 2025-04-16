@@ -221,7 +221,13 @@
                 .then(data => {
                     const albumList = document.getElementById('album-list');
                     albumList.innerHTML = '';
-
+                    const albumLink = document.createElement('a');
+                    albumLink.href = '#';
+                    albumLink.textContent = "home";
+                    albumLink.onclick = function () {
+                        loadAlbum('images');
+                    };
+                    albumList.appendChild(albumLink);
                     data.forEach(item => {
                         if (item.type === 'dir') {
                             const albumLink = document.createElement('a');
