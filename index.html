@@ -171,43 +171,47 @@
         }
 
         function loadImages() {
-            const path = folderPath === 'images' ? 'images' : `images/${folderPath}`;
-            const apiUrl = `https://api.github.com/repos/${repoOwner}/${repoName}/contents/${path}`;
+                const path = folderPath === 'images' ? 'images' : `images/${folderPath}`;
+                const apiUrl = `https://api.github.com/repos/${repoOwner}/${repoName}/contents/${path}`;
 
-            fetch(apiUrl)
-                .then(response => response.json())
-                .then(data => {
-                    const gallery = document.getElementById('gallery');
-                    gallery.innerHTML = '';
+                fetch(apiUrl)
+                    .then(response => response.json())
+                    .then(data => {
+                        const gallery = document.getElementById('gallery');
+                        gallery.innerHTML = '';
 
-                    data.forEach(file => {
-                        if (file.type === 'file' && file.name.match(/\.(jpg|jpeg|png|gif|heic|heif)$/i)) {
-                            const photoDiv = document.createElement('div');
-                            photoDiv.classList.add('photo');
+                        data.forEach(file => {
+                            if (file.type === 'file' && file.name.match(/\.(jpg|jpeg|png|gif|heic|heif)$/i)) {
+                                const photoDiv = document.createElement('div');
+                                photoDiv.classList.add('photo');
 
-                            const img = document.createElement('img');
-                            img.alt = file.name;
-                            img.loading = "lazy";
+                                const img = document.createElement('img');
+                                img.alt = file.name;
+                                img.loading = "lazy";
 
-                            if (file.name.match(/\.(heic|heif)$/i)) {
-                                fetch(file.download_url)
-                                    .then(response => response.blob())
-                                    .then(blob => {
-                                        heic2any({ blob: blob, toType: 'image/jpeg' })
-                                            .then(convertedBlob => {
-                                                img.src = URL.createObjectURL(convertedBlob);
-                                            });
-                                    });
-                            } else {
-                                img.src = file.download_url;
+                                // jsDelivr 
+                                const jsDelivrUrl = `https://cdn.jsdelivr.net/gh/${repoOwner}/${repoName}@main/${path}/${file.name}`;
+
+                                if (file.name.match(/\.(heic|heif)$/i)) {
+                                    fetch(jsDelivrUrl)
+                                        .then(response => response.blob())
+                                        .then(blob => {
+                                            heic2any({ blob: blob, toType: 'image/jpeg' })
+                                                .then(convertedBlob => {
+                                                    img.src = URL.createObjectURL(convertedBlob);
+                                                });
+                                        });
+                                } else {
+                                    img.src = jsDelivrUrl;
+                                }
+
+                                photoDiv.appendChild(img);
+                                gallery.appendChild(photoDiv);
                             }
-
-                            photoDiv.appendChild(img);
-                            gallery.appendChild(photoDiv);
-                        }
+                        });
                     });
-                });
-        }
+            }
+
 
         function loadAlbums() {
             const apiUrl = `https://api.github.com/repos/${repoOwner}/${repoName}/contents/images`;
