@@ -187,6 +187,7 @@
 
                             const img = document.createElement('img');
                             img.alt = file.name;
+                            img.loading = "lazy";
 
                             if (file.name.match(/\.(heic|heif)$/i)) {
                                 fetch(file.download_url)
