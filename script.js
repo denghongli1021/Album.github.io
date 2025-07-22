@@ -224,6 +224,9 @@ function loadAlbums() {
                     const albumLink = document.createElement('a');
                     albumLink.href = '#';
                     albumLink.textContent = item.name;
+                    if (albumLink.textContent === '京都X大阪X神戶') {
+                        albumLink.title = '20250120-20250129';
+                    }
                     albumLink.onclick = function () {
                         loadAlbum(item.name);
                     };
