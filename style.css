@@ -265,7 +265,6 @@ h1 {
     font-size: 12px;
     font-weight: bold;
     z-index: 5;
-    display: none;
 }
 
 .media-type.video {
@@ -279,4 +278,5 @@ h1 {
 
 .media-type.photo {
     background-color: rgba(34, 139, 34, 0.8);
+    display: none;
 }
