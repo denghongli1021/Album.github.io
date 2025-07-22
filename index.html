@@ -1,24 +1,20 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="zh-TW">
 
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>My Photo Album</title>
-    <link rel="stylesheet" href="style.css">
+    <link rel="stylesheet" href="styles.css">
 </head>
 
 <body>
-
     <h1>Welcome to My Photo Album</h1>
 
     <button class="menu-btn" id="toggleBtn" onclick="toggleSidebar()">&#x3E;</button>
 
-    <div class="sidebar hide" id="sidebar">
-        <!-- 動態相簿選單 -->
+    <div class="sidebar" id="sidebar">
         <div id="album-list"></div>
-
-        <!-- 撥放器 -->
         <div id="music-player"></div>
     </div>
 
@@ -34,10 +30,8 @@
         </div>
     </div>
 
-    <script src="https://cdn.jsdelivr.net/npm/heic2any@latest/dist/heic2any.bundle.js"></script>
     <script src="https://www.youtube.com/iframe_api"></script>
     <script src="script.js"></script>
-
 </body>
 
 </html>

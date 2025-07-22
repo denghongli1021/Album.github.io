@@ -27,8 +27,7 @@ h1 {
     cursor: pointer;
     border-radius: 5px;
     z-index: 1000;
-    transition: background-color 0.3s, transform 0.3s;
-    transition: left 0.5s ease;
+    transition: background-color 0.3s, transform 0.3s, left 0.5s ease;
 }
 
 .menu-btn:hover {
@@ -64,7 +63,6 @@ h1 {
     background-color: #555;
 }
 
-/* 隱藏時撥放器透明 */
 .sidebar.hide #music-player {
     opacity: 0;
     pointer-events: none;
@@ -121,6 +119,7 @@ h1 {
     transition: transform 0.2s;
     position: relative;
     cursor: pointer;
+    background-color: #000;
 }
 
 .photo img {
@@ -139,6 +138,33 @@ h1 {
     transform: scale(1.05);
 }
 
+/* 改良的影片縮圖樣式 */
+.video-thumbnail {
+    width: 100%;
+    height: 100%;
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    position: relative;
+}
+
+.video-thumbnail.loaded {
+    background: none;
+}
+
+.video-thumbnail video {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    opacity: 0;
+    transition: opacity 0.3s ease;
+}
+
+.video-thumbnail video.loaded {
+    opacity: 1;
+}
+
 /* 影片播放圖示覆蓋 */
 .photo .play-icon {
     position: absolute;
@@ -155,11 +181,32 @@ h1 {
     color: white;
     font-size: 24px;
     pointer-events: none;
+    z-index: 10;
 }
 
 .photo .play-icon::after {
     content: '▶';
     margin-left: 3px;
+}
+
+/* 載入中動畫 */
+.loading-spinner {
+    width: 40px;
+    height: 40px;
+    border: 3px solid rgba(255, 255, 255, 0.3);
+    border-top: 3px solid white;
+    border-radius: 50%;
+    animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+    0% {
+        transform: rotate(0deg);
+    }
+
+    100% {
+        transform: rotate(360deg);
+    }
 }
 
 /* 彈出視窗樣式 */
@@ -217,4 +264,13 @@ h1 {
     border-radius: 4px;
     font-size: 12px;
     font-weight: bold;
+    z-index: 5;
+}
+
+.media-type.video {
+    background-color: rgba(220, 20, 60, 0.8);
+}
+
+.media-type.photo {
+    background-color: rgba(34, 139, 34, 0.8);
 }

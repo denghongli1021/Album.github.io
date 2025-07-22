@@ -1,63 +1,95 @@
+// 全域變數
 const repoOwner = 'denghongli1021';
 const repoName = 'Album.github.io';
 let folderPath = 'images';
 
+// 載入相簿函數
 function loadAlbum(albumName) {
     folderPath = albumName;
     loadImages();
 }
 
-function createVideoThumbnail(videoUrl, callback) {
+// 改良的影片縮圖生成函數
+function createVideoThumbnail(videoUrl, photoDiv) {
+    const thumbnailContainer = document.createElement('div');
+    thumbnailContainer.classList.add('video-thumbnail');
+    
+    // 載入中動畫
+    const spinner = document.createElement('div');
+    spinner.classList.add('loading-spinner');
+    thumbnailContainer.appendChild(spinner);
+    
+    // 建立影片元素用於縮圖
     const video = document.createElement('video');
-    video.crossOrigin = 'anonymous';
     video.muted = true;
+    video.preload = 'metadata';
+    video.crossOrigin = 'anonymous';
+    
+    let thumbnailGenerated = false;
+    
+    // 多個時間點嘗試生成縮圖
+    const timePoints = [1, 0.5, 2, 3, 0.1];
+    let currentTimeIndex = 0;
+    
+    function tryGenerateThumbnail() {
+        if (thumbnailGenerated || currentTimeIndex >= timePoints.length) return;
+        
+        video.currentTime = timePoints[currentTimeIndex];
+        currentTimeIndex++;
+    }
     
     video.addEventListener('loadeddata', function() {
-        video.currentTime = 1; // 設定到第1秒來獲取縮圖
+        tryGenerateThumbnail();
     });
     
     video.addEventListener('seeked', function() {
-        const canvas = document.createElement('canvas');
-        canvas.width = 250;
-        canvas.height = 250;
-        const ctx = canvas.getContext('2d');
+        if (thumbnailGenerated) return;
         
-        // 計算影片的縮放比例以填滿容器
-        const videoAspect = video.videoWidth / video.videoHeight;
-        const canvasAspect = canvas.width / canvas.height;
-        
-        let drawWidth, drawHeight, drawX, drawY;
-        
-        if (videoAspect > canvasAspect) {
-            // 影片比較寬，以高度為準
-            drawHeight = canvas.height;
-            drawWidth = drawHeight * videoAspect;
-            drawX = (canvas.width - drawWidth) / 2;
-            drawY = 0;
-        } else {
-            // 影片比較高，以寬度為準
-            drawWidth = canvas.width;
-            drawHeight = drawWidth / videoAspect;
-            drawX = 0;
-            drawY = (canvas.height - drawHeight) / 2;
+        try {
+            // 移除載入動畫
+            if (spinner.parentNode) {
+                spinner.parentNode.removeChild(spinner);
+            }
+            
+            // 顯示影片幀作為縮圖
+            video.classList.add('loaded');
+            thumbnailContainer.classList.add('loaded');
+            thumbnailContainer.appendChild(video);
+            thumbnailGenerated = true;
+            
+        } catch (error) {
+            console.warn('無法生成影片縮圖:', error);
+            // 如果失敗，嘗試下一個時間點
+            setTimeout(() => {
+                if (!thumbnailGenerated) {
+                    tryGenerateThumbnail();
+                }
+            }, 100);
+        }
+    });
+    
+    video.addEventListener('error', function(e) {
+        console.warn('影片載入錯誤:', e);
+        // 移除載入動畫，顯示預設背景
+        if (spinner.parentNode) {
+            spinner.parentNode.removeChild(spinner);
         }
         
-        ctx.drawImage(video, drawX, drawY, drawWidth, drawHeight);
-        
-        canvas.toBlob(function(blob) {
-            const thumbnailUrl = URL.createObjectURL(blob);
-            callback(thumbnailUrl);
-        }, 'image/jpeg', 0.8);
+        // 顯示影片圖示
+        const videoIcon = document.createElement('div');
+        videoIcon.innerHTML = '🎬';
+        videoIcon.style.fontSize = '48px';
+        videoIcon.style.opacity = '0.7';
+        thumbnailContainer.appendChild(videoIcon);
     });
     
-    video.addEventListener('error', function() {
-        // 如果無法生成縮圖，使用預設圖示
-        callback(null);
-    });
-    
+    // 設置影片源
     video.src = videoUrl;
+    
+    return thumbnailContainer;
 }
 
+// 檢查檔案類型函數
 function isVideoFile(filename) {
     return filename.match(/\.(mp4|webm|ogg|mov|avi|mkv|wmv|flv|m4v)$/i);
 }
@@ -66,6 +98,7 @@ function isImageFile(filename) {
     return filename.match(/\.(jpg|jpeg|png|gif|heic|heif|webp|bmp|tiff)$/i);
 }
 
+// 影片彈出視窗控制
 function openVideoModal(videoSrc) {
     const modal = document.getElementById('videoModal');
     const modalVideo = document.getElementById('modalVideo');
@@ -73,7 +106,6 @@ function openVideoModal(videoSrc) {
     modalVideo.src = videoSrc;
     modal.style.display = 'block';
     
-    // 自動播放（某些瀏覽器可能需要用戶互動）
     modalVideo.play().catch(e => console.log('自動播放被阻止:', e));
 }
 
@@ -86,6 +118,7 @@ function closeVideoModal() {
     modal.style.display = 'none';
 }
 
+// 載入圖片和影片
 function loadImages() {
     const path = folderPath === 'images' ? 'images' : `images/${folderPath}`;
     const apiUrl = `https://api.github.com/repos/${repoOwner}/${repoName}/contents/${path}`;
@@ -101,15 +134,13 @@ function loadImages() {
                     const photoDiv = document.createElement('div');
                     photoDiv.classList.add('photo');
 
-                    // jsDelivr URL
                     const jsDelivrUrl = `https://cdn.jsdelivr.net/gh/${repoOwner}/${repoName}@main/${path}/${file.name}`;
 
                     if (isVideoFile(file.name)) {
                         // 處理影片檔案
-                        const video = document.createElement('video');
-                        video.muted = true;
-                        video.preload = 'metadata';
-                        
+                        const thumbnailContainer = createVideoThumbnail(jsDelivrUrl, photoDiv);
+                        photoDiv.appendChild(thumbnailContainer);
+
                         // 添加播放圖示
                         const playIcon = document.createElement('div');
                         playIcon.classList.add('play-icon');
@@ -117,65 +148,24 @@ function loadImages() {
 
                         // 添加媒體類型標籤
                         const mediaType = document.createElement('div');
-                        mediaType.classList.add('media-type');
+                        mediaType.classList.add('media-type', 'video');
                         mediaType.textContent = 'VIDEO';
                         photoDiv.appendChild(mediaType);
 
-                        // 生成縮圖
-                        video.addEventListener('loadeddata', function() {
-                            video.currentTime = 1;
-                        });
-
-                        video.addEventListener('seeked', function() {
-                            const canvas = document.createElement('canvas');
-                            canvas.width = 250;
-                            canvas.height = 250;
-                            const ctx = canvas.getContext('2d');
-                            
-                            const videoAspect = video.videoWidth / video.videoHeight;
-                            const canvasAspect = 1; // 正方形
-                            
-                            let drawWidth, drawHeight, drawX, drawY;
-                            
-                            if (videoAspect > canvasAspect) {
-                                drawHeight = canvas.height;
-                                drawWidth = drawHeight * videoAspect;
-                                drawX = (canvas.width - drawWidth) / 2;
-                                drawY = 0;
-                            } else {
-                                drawWidth = canvas.width;
-                                drawHeight = drawWidth / videoAspect;
-                                drawX = 0;
-                                drawY = (canvas.height - drawHeight) / 2;
-                            }
-                            
-                            ctx.drawImage(video, drawX, drawY, drawWidth, drawHeight);
-                            
-                            canvas.toBlob(function(blob) {
-                                const img = document.createElement('img');
-                                img.src = URL.createObjectURL(blob);
-                                img.alt = file.name;
-                                img.loading = "lazy";
-                                photoDiv.insertBefore(img, photoDiv.firstChild);
-                            }, 'image/jpeg', 0.8);
-                        });
-
-                        video.src = jsDelivrUrl;
-
-                        // 點擊事件 - 開啟影片彈出視窗
+                        // 點擊事件
                         photoDiv.addEventListener('click', function() {
                             openVideoModal(jsDelivrUrl);
                         });
 
                     } else {
-                        // 處理圖片檔案（原有邏輯）
+                        // 處理圖片檔案
                         const img = document.createElement('img');
                         img.alt = file.name;
                         img.loading = "lazy";
 
                         // 添加媒體類型標籤
                         const mediaType = document.createElement('div');
-                        mediaType.classList.add('media-type');
+                        mediaType.classList.add('media-type', 'photo');
                         mediaType.textContent = 'PHOTO';
                         photoDiv.appendChild(mediaType);
 
@@ -183,10 +173,15 @@ function loadImages() {
                             fetch(jsDelivrUrl)
                                 .then(response => response.blob())
                                 .then(blob => {
-                                    heic2any({ blob: blob, toType: 'image/jpeg' })
-                                        .then(convertedBlob => {
-                                            img.src = URL.createObjectURL(convertedBlob);
-                                        });
+                                    // 這裡需要 heic2any 庫來處理 HEIC 檔案
+                                    if (typeof heic2any !== 'undefined') {
+                                        heic2any({ blob: blob, toType: 'image/jpeg' })
+                                            .then(convertedBlob => {
+                                                img.src = URL.createObjectURL(convertedBlob);
+                                            });
+                                    } else {
+                                        img.src = jsDelivrUrl; // 退回到原始 URL
+                                    }
                                 });
                         } else {
                             img.src = jsDelivrUrl;
@@ -204,6 +199,7 @@ function loadImages() {
         });
 }
 
+// 載入相簿列表
 function loadAlbums() {
     const apiUrl = `https://api.github.com/repos/${repoOwner}/${repoName}/contents/images`;
 
@@ -212,6 +208,7 @@ function loadAlbums() {
         .then(data => {
             const albumList = document.getElementById('album-list');
             albumList.innerHTML = '';
+            
             const albumLink = document.createElement('a');
             albumLink.href = '#';
             albumLink.textContent = "Home";
@@ -219,6 +216,7 @@ function loadAlbums() {
                 loadAlbum('images');
             };
             albumList.appendChild(albumLink);
+            
             data.forEach(item => {
                 if (item.type === 'dir') {
                     const albumLink = document.createElement('a');
@@ -236,6 +234,7 @@ function loadAlbums() {
         });
 }
 
+// 側邊欄切換
 function toggleSidebar() {
     const sidebar = document.getElementById('sidebar');
     const button = document.getElementById('toggleBtn');
@@ -253,18 +252,22 @@ function toggleSidebar() {
     }
 }
 
-// 彈出視窗關閉事件
+// 事件監聽器設置
 document.addEventListener('DOMContentLoaded', function() {
     const modal = document.getElementById('videoModal');
     const closeBtn = document.querySelector('.close');
 
-    closeBtn.addEventListener('click', closeVideoModal);
+    if (closeBtn) {
+        closeBtn.addEventListener('click', closeVideoModal);
+    }
 
-    modal.addEventListener('click', function(e) {
-        if (e.target === modal) {
-            closeVideoModal();
-        }
-    });
+    if (modal) {
+        modal.addEventListener('click', function(e) {
+            if (e.target === modal) {
+                closeVideoModal();
+            }
+        });
+    }
 
     document.addEventListener('keydown', function(e) {
         if (e.key === 'Escape') {
@@ -273,12 +276,13 @@ document.addEventListener('DOMContentLoaded', function() {
     });
 });
 
+// 頁面載入完成後執行
 window.onload = function () {
     loadAlbums();
     loadAlbum('images');
 };
 
-// YouTube Player
+// YouTube Player 設定
 let player;
 function onYouTubeIframeAPIReady() {
     player = new YT.Player('music-player', {
