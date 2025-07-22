@@ -4,5 +4,12 @@
 
 接下來在command line打 git sparse-checkout init
 
-
 git gc --prune=now
+
+# stash
+
+git stash apply
+
+git stash pop
+
+git stash list
