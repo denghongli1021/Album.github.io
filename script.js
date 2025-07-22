@@ -166,7 +166,7 @@ function loadImages() {
                         // 添加媒體類型標籤
                         const mediaType = document.createElement('div');
                         mediaType.classList.add('media-type', 'photo');
-                        mediaType.textContent = 'PHOTO';
+                        // mediaType.textContent = 'PHOTO';
                         photoDiv.appendChild(mediaType);
 
                         if (file.name.match(/\.(heic|heif)$/i)) {

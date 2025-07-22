@@ -265,10 +265,16 @@ h1 {
     font-size: 12px;
     font-weight: bold;
     z-index: 5;
+    display: none;
 }
 
 .media-type.video {
     background-color: rgba(220, 20, 60, 0.8);
+    width: auto;
+    height: auto;
+    max-width: 80px;
+    max-height: 24px;
+    display: inline-block;
 }
 
 .media-type.photo {
