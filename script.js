@@ -9,84 +9,108 @@ function loadAlbum(albumName) {
     loadImages();
 }
 
-// 改良的影片縮圖生成函數
+// 優化的影片縮圖函數 - 延遲生成預覽圖
 function createVideoThumbnail(videoUrl, photoDiv) {
     const thumbnailContainer = document.createElement('div');
     thumbnailContainer.classList.add('video-thumbnail');
     
-    // 載入中動畫
-    const spinner = document.createElement('div');
-    spinner.classList.add('loading-spinner');
-    thumbnailContainer.appendChild(spinner);
+    // 初始顯示載入圖示
+    const loadingIcon = document.createElement('div');
+    loadingIcon.innerHTML = '🎬';
+    loadingIcon.style.fontSize = '48px';
+    loadingIcon.style.opacity = '0.7';
+    loadingIcon.style.color = 'white';
+    loadingIcon.classList.add('video-placeholder');
+    thumbnailContainer.appendChild(loadingIcon);
     
-    // 建立影片元素用於縮圖
+    // 延遲載入縮圖
+    const observer = new IntersectionObserver((entries) => {
+        entries.forEach(entry => {
+            if (entry.isIntersecting) {
+                generateThumbnail(videoUrl, thumbnailContainer, loadingIcon);
+                observer.unobserve(entry.target);
+            }
+        });
+    }, { rootMargin: '50px' });
+    
+    observer.observe(thumbnailContainer);
+    
+    return thumbnailContainer;
+}
+
+function generateThumbnail(videoUrl, container, placeholder) {
     const video = document.createElement('video');
+    video.src = videoUrl;
     video.muted = true;
     video.preload = 'metadata';
     video.crossOrigin = 'anonymous';
+    video.style.display = 'none'; // 隱藏video元素
+    video.currentTime = 1; // 設置到第1秒
+    
+    const canvas = document.createElement('canvas');
+    canvas.width = 320;
+    canvas.height = 180;
+    canvas.style.width = '100%';
+    canvas.style.height = '100%';
+    canvas.style.objectFit = 'cover';
     
     let thumbnailGenerated = false;
     
-    // 多個時間點嘗試生成縮圖
-    const timePoints = [1, 0.5, 2, 3, 0.1];
-    let currentTimeIndex = 0;
-    
-    function tryGenerateThumbnail() {
-        if (thumbnailGenerated || currentTimeIndex >= timePoints.length) return;
-        
-        video.currentTime = timePoints[currentTimeIndex];
-        currentTimeIndex++;
-    }
-    
     video.addEventListener('loadeddata', function() {
-        tryGenerateThumbnail();
+        // 當影片資料載入完成後，設置時間
+        video.currentTime = 1;
     });
     
     video.addEventListener('seeked', function() {
         if (thumbnailGenerated) return;
         
         try {
-            // 移除載入動畫
-            if (spinner.parentNode) {
-                spinner.parentNode.removeChild(spinner);
-            }
+            const ctx = canvas.getContext('2d');
+            canvas.width = video.videoWidth || 320;
+            canvas.height = video.videoHeight || 180;
+            ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
             
-            // 顯示影片幀作為縮圖
-            video.classList.add('loaded');
-            thumbnailContainer.classList.add('loaded');
-            thumbnailContainer.appendChild(video);
+            // 移除占位圖示，顯示縮圖
+            if (placeholder.parentNode) {
+                placeholder.parentNode.removeChild(placeholder);
+            }
+            container.appendChild(canvas);
             thumbnailGenerated = true;
             
+            // 移除video元素以節省記憶體
+            if (video.parentNode) {
+                video.parentNode.removeChild(video);
+            }
+            
         } catch (error) {
-            console.warn('無法生成影片縮圖:', error);
-            // 如果失敗，嘗試下一個時間點
-            setTimeout(() => {
-                if (!thumbnailGenerated) {
-                    tryGenerateThumbnail();
-                }
-            }, 100);
+            console.warn('縮圖生成失敗:', error);
+            showFallbackIcon(container, placeholder);
         }
     });
     
-    video.addEventListener('error', function(e) {
-        console.warn('影片載入錯誤:', e);
-        // 移除載入動畫，顯示預設背景
-        if (spinner.parentNode) {
-            spinner.parentNode.removeChild(spinner);
-        }
-        
-        // 顯示影片圖示
-        const videoIcon = document.createElement('div');
-        videoIcon.innerHTML = '🎬';
-        videoIcon.style.fontSize = '48px';
-        videoIcon.style.opacity = '0.7';
-        thumbnailContainer.appendChild(videoIcon);
+    video.addEventListener('error', function() {
+        showFallbackIcon(container, placeholder);
     });
     
-    // 設置影片源
-    video.src = videoUrl;
+    // 將video元素暫時添加到容器中(隱藏)
+    container.appendChild(video);
     
-    return thumbnailContainer;
+    // 超時處理
+    setTimeout(() => {
+        if (!thumbnailGenerated) {
+            showFallbackIcon(container, placeholder);
+            if (video.parentNode) {
+                video.parentNode.removeChild(video);
+            }
+        }
+    }, 5000);
+}
+
+function showFallbackIcon(container, placeholder) {
+    if (!placeholder.parentNode) {
+        placeholder.style.color = '#999';
+        container.appendChild(placeholder);
+    }
 }
 
 // 檢查檔案類型函數
@@ -162,6 +186,8 @@ function loadImages() {
                         const img = document.createElement('img');
                         img.alt = file.name;
                         img.loading = "lazy";
+                        img.style.opacity = '0';
+                        img.style.transition = 'opacity 0.3s ease';
 
                         // 添加媒體類型標籤
                         const mediaType = document.createElement('div');
@@ -186,6 +212,11 @@ function loadImages() {
                         } else {
                             img.src = jsDelivrUrl;
                         }
+                        
+                        // 圖片載入完成後顯示
+                        img.onload = function() {
+                            this.style.opacity = '1';
+                        };
 
                         photoDiv.appendChild(img);
                     }
@@ -307,3 +338,4 @@ function onYouTubeIframeAPIReady() {
         }
     });
 }
+
