@@ -139,7 +139,7 @@ function isVideoFile(filename) {
 }
 
 function isImageFile(filename) {
-    return /\.(jpg|jpeg|png|gif|heic|heif|webp|bmp|tiff)$/i.test(filename);
+    return /\.(jpg|jpeg|jfif|png|gif|heic|heif|webp|bmp|tiff)$/i.test(filename);
 }
 
 // 影片彈出視窗控制
