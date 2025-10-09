@@ -1,5 +1,5 @@
 {
-  "generated": "2025-10-09T07:47:33.258Z",
+  "generated": "2025-10-09T12:40:54.150Z",
   "baseUrl": "https://cdn.jsdelivr.net/gh/denghongli1021/Album.github.io@main",
   "items": [
     {
@@ -8695,6 +8695,13 @@
       "files": [
         {
           "type": "file",
+          "name": "781618908.19705.mp4",
+          "path": "202510_1/781618908.19705.mp4",
+          "isVideo": true,
+          "isImage": false
+        },
+        {
+          "type": "file",
           "name": "8D1BC297-D461-4367-8250-0537D09C40CD.jpeg",
           "path": "202510_1/8D1BC297-D461-4367-8250-0537D09C40CD.jpeg",
           "isVideo": false,
@@ -8956,6 +8963,167 @@
           "type": "file",
           "name": "IMG_3776.png",
           "path": "202510_1/IMG_3776.png",
+          "isVideo": false,
+          "isImage": true
+        },
+        {
+          "type": "file",
+          "name": "IMG_3777.jpeg",
+          "path": "202510_1/IMG_3777.jpeg",
+          "isVideo": false,
+          "isImage": true
+        },
+        {
+          "type": "file",
+          "name": "IMG_3778.jpeg",
+          "path": "202510_1/IMG_3778.jpeg",
+          "isVideo": false,
+          "isImage": true
+        },
+        {
+          "type": "file",
+          "name": "IMG_3780.jpeg",
+          "path": "202510_1/IMG_3780.jpeg",
+          "isVideo": false,
+          "isImage": true
+        },
+        {
+          "type": "file",
+          "name": "IMG_3781.jpeg",
+          "path": "202510_1/IMG_3781.jpeg",
+          "isVideo": false,
+          "isImage": true
+        },
+        {
+          "type": "file",
+          "name": "IMG_3782.jpeg",
+          "path": "202510_1/IMG_3782.jpeg",
+          "isVideo": false,
+          "isImage": true
+        },
+        {
+          "type": "file",
+          "name": "IMG_3784.jpeg",
+          "path": "202510_1/IMG_3784.jpeg",
+          "isVideo": false,
+          "isImage": true
+        },
+        {
+          "type": "file",
+          "name": "IMG_3791.jpeg",
+          "path": "202510_1/IMG_3791.jpeg",
+          "isVideo": false,
+          "isImage": true
+        },
+        {
+          "type": "file",
+          "name": "IMG_3792.jpeg",
+          "path": "202510_1/IMG_3792.jpeg",
+          "isVideo": false,
+          "isImage": true
+        },
+        {
+          "type": "file",
+          "name": "IMG_3793.jpeg",
+          "path": "202510_1/IMG_3793.jpeg",
+          "isVideo": false,
+          "isImage": true
+        },
+        {
+          "type": "file",
+          "name": "IMG_3794.mov",
+          "path": "202510_1/IMG_3794.mov",
+          "isVideo": true,
+          "isImage": false
+        },
+        {
+          "type": "file",
+          "name": "IMG_3797.jpeg",
+          "path": "202510_1/IMG_3797.jpeg",
+          "isVideo": false,
+          "isImage": true
+        },
+        {
+          "type": "file",
+          "name": "IMG_3799.jpeg",
+          "path": "202510_1/IMG_3799.jpeg",
+          "isVideo": false,
+          "isImage": true
+        },
+        {
+          "type": "file",
+          "name": "IMG_3800.jpeg",
+          "path": "202510_1/IMG_3800.jpeg",
+          "isVideo": false,
+          "isImage": true
+        },
+        {
+          "type": "file",
+          "name": "IMG_3813.jpeg",
+          "path": "202510_1/IMG_3813.jpeg",
+          "isVideo": false,
+          "isImage": true
+        },
+        {
+          "type": "file",
+          "name": "IMG_3814.jpeg",
+          "path": "202510_1/IMG_3814.jpeg",
+          "isVideo": false,
+          "isImage": true
+        },
+        {
+          "type": "file",
+          "name": "IMG_3816.jpeg",
+          "path": "202510_1/IMG_3816.jpeg",
+          "isVideo": false,
+          "isImage": true
+        },
+        {
+          "type": "file",
+          "name": "IMG_3817.jpeg",
+          "path": "202510_1/IMG_3817.jpeg",
+          "isVideo": false,
+          "isImage": true
+        },
+        {
+          "type": "file",
+          "name": "IMG_3818.jpeg",
+          "path": "202510_1/IMG_3818.jpeg",
+          "isVideo": false,
+          "isImage": true
+        },
+        {
+          "type": "file",
+          "name": "IMG_3819.jpeg",
+          "path": "202510_1/IMG_3819.jpeg",
+          "isVideo": false,
+          "isImage": true
+        },
+        {
+          "type": "file",
+          "name": "IMG_3821.jpeg",
+          "path": "202510_1/IMG_3821.jpeg",
+          "isVideo": false,
+          "isImage": true
+        },
+        {
+          "type": "file",
+          "name": "IMG_3823.jpeg",
+          "path": "202510_1/IMG_3823.jpeg",
+          "isVideo": false,
+          "isImage": true
+        },
+        {
+          "type": "file",
+          "name": "IMG_3824.jpeg",
+          "path": "202510_1/IMG_3824.jpeg",
+          "isVideo": false,
+          "isImage": true
+        },
+        {
+          "type": "file",
+          "name": "IMG_3825.jpeg",
+          "path": "202510_1/IMG_3825.jpeg",
           "isVideo": false,
           "isImage": true
         }
