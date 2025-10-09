@@ -10,6 +10,8 @@ on:
 jobs:
   generate-list:
     runs-on: ubuntu-latest
+    permissions:
+      contents: write
 
     steps:
       - name: Checkout repository
