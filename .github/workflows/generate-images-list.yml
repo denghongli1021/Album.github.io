@@ -1,0 +1,95 @@
+name: Generate Images List
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - "images/**"
+  workflow_dispatch:
+
+jobs:
+  generate-list:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v3
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v3
+        with:
+          node-version: "18"
+
+      - name: Generate images index
+        run: |
+          node << 'EOF'
+          const fs = require('fs');
+          const path = require('path');
+
+          function scanDirectory(dir, baseDir = '') {
+            const results = [];
+            const items = fs.readdirSync(dir, { withFileTypes: true });
+            
+            for (const item of items) {
+              const fullPath = path.join(dir, item.name);
+              const relativePath = path.join(baseDir, item.name);
+              
+              if (item.isDirectory()) {
+                // 遞迴掃描子目錄
+                const subResults = scanDirectory(fullPath, relativePath);
+                results.push({
+                  type: 'dir',
+                  name: item.name,
+                  path: relativePath,
+                  files: subResults
+                });
+              } else if (item.isFile()) {
+                // 檢查是否為圖片或影片
+                const ext = path.extname(item.name).toLowerCase();
+                const imageExts = ['.jpg', '.jpeg', '.png', '.gif', '.webp', '.bmp', '.heic', '.heif', '.jfif', '.tiff'];
+                const videoExts = ['.mp4', '.webm', '.ogg', '.mov', '.avi', '.mkv', '.wmv', '.flv', '.m4v'];
+                
+                if (imageExts.includes(ext) || videoExts.includes(ext)) {
+                  results.push({
+                    type: 'file',
+                    name: item.name,
+                    path: relativePath,
+                    isVideo: videoExts.includes(ext),
+                    isImage: imageExts.includes(ext)
+                  });
+                }
+              }
+            }
+            
+            return results;
+          }
+
+          // 掃描 images 目錄
+          const imagesDir = './images';
+          if (!fs.existsSync(imagesDir)) {
+            console.error('images directory not found');
+            process.exit(1);
+          }
+
+          const results = scanDirectory(imagesDir);
+
+          // 生成 JSON
+          const output = {
+            generated: new Date().toISOString(),
+            baseUrl: 'https://cdn.jsdelivr.net/gh/denghongli1021/Album.github.io@main',
+            items: results
+          };
+
+          fs.writeFileSync('images-index.json', JSON.stringify(output, null, 2));
+          console.log('✅ images-index.json generated successfully');
+          console.log(`📊 Total items: ${results.length}`);
+          EOF
+
+      - name: Commit and push if changed
+        run: |
+          git config --local user.email "github-actions[bot]@users.noreply.github.com"
+          git config --local user.name "github-actions[bot]"
+          git add images-index.json
+          git diff --quiet && git diff --staged --quiet || (git commit -m "🤖 Auto-update images index [skip ci]" && git push)

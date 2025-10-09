@@ -4,29 +4,51 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="Bonus 的個人相簿網站，瀏覽精選照片與影片">
     <title>Bonus's Photo Album</title>
     <link rel="stylesheet" href="style.css">
 </head>
 
 <body>
-    <h1>Bonus's Photo Album</h1>
+    <header>
+        <h1>Bonus's Photo Album</h1>
+    </header>
 
-    <button class="menu-btn" id="toggleBtn" onclick="toggleSidebar()">&#x3E;</button>
+    <button class="menu-btn" id="toggleBtn" onclick="toggleSidebar()" 
+            aria-label="開啟選單" aria-expanded="false" aria-controls="sidebar">&#x3E;</button>
 
-    <div class="sidebar" id="sidebar">
-        <div id="album-list"></div>
-        <div id="music-player"></div>
-    </div>
+    <nav class="sidebar" id="sidebar" role="navigation" aria-label="相簿導航">
+        <div id="album-list" role="list"></div>
+        <div id="music-player" aria-label="背景音樂播放器"></div>
+    </nav>
 
-    <div class="gallery" id="gallery"></div>
+    <main>
+        <div class="gallery" id="gallery" role="region" aria-label="相簿畫廊"></div>
+    </main>
 
     <!-- 影片彈出視窗 -->
-    <div id="videoModal" class="modal">
+    <div id="videoModal" class="modal" role="dialog" aria-modal="true" aria-label="影片播放器">
         <div class="modal-content">
-            <span class="close">&times;</span>
-            <video id="modalVideo" controls>
+            <button class="close" aria-label="關閉影片">&times;</button>
+            <video id="modalVideo" controls aria-label="影片內容">
                 您的瀏覽器不支援影片播放。
             </video>
+        </div>
+    </div>
+
+    <!-- 圖片燈箱 -->
+    <div id="imageLightbox" class="lightbox" role="dialog" aria-modal="true" aria-label="圖片檢視器">
+        <button id="lightboxClose" class="lightbox-close" aria-label="關閉圖片">&times;</button>
+        <button id="lightboxPrev" class="lightbox-nav lightbox-prev" aria-label="上一張">&#10094;</button>
+        <button id="lightboxNext" class="lightbox-nav lightbox-next" aria-label="下一張">&#10095;</button>
+        <button id="slideshowToggle" class="lightbox-slideshow-btn" onclick="toggleSlideshow()" 
+                aria-label="開始幻燈片">▶️</button>
+        <div class="lightbox-content">
+            <img id="lightboxImg" alt="放大顯示的圖片">
+            <div class="lightbox-caption">
+                <span id="lightboxCaption"></span>
+                <span id="lightboxCounter" class="lightbox-counter"></span>
+            </div>
         </div>
     </div>
 

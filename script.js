@@ -1,14 +1,29 @@
+// 配置物件
+const CONFIG = {
+    repoOwner: 'denghongli1021',
+    repoName: 'Album.github.io',
+    cacheDuration: 5 * 60 * 1000, // 5分鐘
+    retryAttempts: 2,
+    imageLoadMargin: '100px',
+    rateLimitThreshold: 10, // 當剩餘請求數低於此值時顯示警告
+    slideshowInterval: 3000, // 幻燈片切換間隔（毫秒）
+    useStaticIndex: true // 使用靜態索引檔案（不呼叫 API）
+};
+
 // 全域變數
-const repoOwner = 'denghongli1021';
-const repoName = 'Album.github.io';
 let folderPath = 'images';
+let currentMediaFiles = []; // 用於燈箱導航
+let currentImageIndex = 0;
+let slideshowTimer = null; // 幻燈片計時器
+let allAlbumImages = []; // 所有相簿的圖片（用於隨機幻燈片）
 
 // 快取管理
 const cache = {
     albums: null,
     mediaFiles: new Map(),
     timestamp: null,
-    CACHE_DURATION: 5 * 60 * 1000 // 5分鐘
+    rateLimit: { remaining: null, limit: null, reset: null },
+    staticIndex: null // 靜態索引快取
 };
 
 // 載入相簿函數 - 新增 URL 更新
@@ -33,6 +48,249 @@ function getAlbumFromUrl() {
     return hash ? decodeURIComponent(hash) : 'images';
 }
 
+// ===== 載入靜態索引 =====
+async function loadStaticIndex() {
+    if (cache.staticIndex) {
+        return cache.staticIndex;
+    }
+    
+    try {
+        const response = await fetch('images-index.json');
+        if (!response.ok) {
+            throw new Error('Failed to load images-index.json');
+        }
+        const data = await response.json();
+        cache.staticIndex = data;
+        return data;
+    } catch (error) {
+        console.error('Error loading static index:', error);
+        return null;
+    }
+}
+
+// 從靜態索引中獲取特定路徑的檔案
+function getFilesFromStaticIndex(staticIndex, targetPath) {
+    if (!staticIndex || !staticIndex.items) return [];
+    
+    if (targetPath === 'images') {
+        // 返回根目錄的檔案
+        return staticIndex.items.filter(item => item.type === 'file');
+    }
+    
+    // 尋找子目錄
+    const albumName = targetPath.replace('images/', '');
+    const album = staticIndex.items.find(item => 
+        item.type === 'dir' && item.name === albumName
+    );
+    
+    return album ? album.files.filter(f => f.type === 'file') : [];
+}
+
+// 從靜態索引中獲取所有相簿
+function getAlbumsFromStaticIndex(staticIndex) {
+    if (!staticIndex || !staticIndex.items) return [];
+    return staticIndex.items.filter(item => item.type === 'dir');
+}
+
+// ===== 隨機幻燈片功能 =====
+async function loadRandomSlideshow() {
+    // 顯示載入指示器
+    showLoadingIndicator();
+    
+    try {
+        if (CONFIG.useStaticIndex) {
+            // 使用靜態索引
+            const staticIndex = await loadStaticIndex();
+            if (!staticIndex) {
+                showError('無法載入圖片索引');
+                return;
+            }
+            
+            allAlbumImages = [];
+            
+            // 收集所有圖片
+            const collectImages = (items, basePath = 'images') => {
+                for (const item of items) {
+                    if (item.type === 'file' && item.isImage) {
+                        allAlbumImages.push({
+                            name: item.name,
+                            path: item.path,
+                            albumPath: basePath
+                        });
+                    } else if (item.type === 'dir' && item.files) {
+                        collectImages(item.files, `images/${item.name}`);
+                    }
+                }
+            };
+            
+            collectImages(staticIndex.items);
+            
+        } else {
+            // 使用 API（原始方法）
+            const apiUrl = `https://api.github.com/repos/${CONFIG.repoOwner}/${CONFIG.repoName}/contents/images`;
+            const response = await fetch(apiUrl);
+            checkRateLimit(response.headers);
+            
+            if (!response.ok) {
+                showError('無法載入相簿列表');
+                return;
+            }
+            
+            const albums = await response.json();
+            allAlbumImages = [];
+            
+            const imagePromises = [];
+            
+            imagePromises.push(
+                fetch(`https://api.github.com/repos/${CONFIG.repoOwner}/${CONFIG.repoName}/contents/images`)
+                    .then(res => res.json())
+                    .then(files => files.filter(f => f.type === 'file' && isImageFile(f.name)))
+            );
+            
+            for (const album of albums) {
+                if (album.type === 'dir') {
+                    imagePromises.push(
+                        fetch(`https://api.github.com/repos/${CONFIG.repoOwner}/${CONFIG.repoName}/contents/images/${album.name}`)
+                            .then(res => res.json())
+                            .then(files => files.filter(f => f.type === 'file' && isImageFile(f.name))
+                                .map(f => ({ ...f, albumPath: `images/${album.name}` })))
+                            .catch(() => [])
+                    );
+                }
+            }
+            
+            const allResults = await Promise.all(imagePromises);
+            allResults.forEach((images) => {
+                images.forEach(img => {
+                    if (!img.albumPath) {
+                        img.albumPath = 'images';
+                    }
+                    allAlbumImages.push(img);
+                });
+            });
+        }
+        
+        if (allAlbumImages.length === 0) {
+            showError('沒有找到任何圖片', false);
+            return;
+        }
+        
+        // 隨機打亂圖片順序
+        shuffleArray(allAlbumImages);
+        
+        // 開始播放隨機幻燈片
+        currentMediaFiles = allAlbumImages;
+        currentImageIndex = 0;
+        openImageLightbox(0);
+        toggleSlideshowMode(true);
+        
+    } catch (error) {
+        console.error('載入隨機幻燈片失敗:', error);
+        showError('載入失敗，請重試');
+    }
+}
+
+// Fisher-Yates 洗牌演算法
+function shuffleArray(array) {
+    for (let i = array.length - 1; i > 0; i--) {
+        const j = Math.floor(Math.random() * (i + 1));
+        [array[i], array[j]] = [array[j], array[i]];
+    }
+    return array;
+}
+
+// ===== 幻燈片播放功能 =====
+
+function toggleSlideshowMode(start) {
+    const slideshowBtn = document.getElementById('slideshowToggle');
+    const lightbox = document.getElementById('imageLightbox');
+    
+    if (start) {
+        // 開始幻燈片
+        slideshowTimer = setInterval(() => {
+            navigateLightbox(1);
+        }, CONFIG.slideshowInterval);
+        
+        if (slideshowBtn) {
+            slideshowBtn.innerHTML = '⏸';
+            slideshowBtn.setAttribute('aria-label', '暫停幻燈片');
+        }
+        lightbox?.classList.add('slideshow-mode');
+    } else {
+        // 停止幻燈片
+        if (slideshowTimer) {
+            clearInterval(slideshowTimer);
+            slideshowTimer = null;
+        }
+        
+        if (slideshowBtn) {
+            slideshowBtn.innerHTML = '▶️';
+            slideshowBtn.setAttribute('aria-label', '開始幻燈片');
+        }
+        lightbox?.classList.remove('slideshow-mode');
+    }
+}
+
+function toggleSlideshow() {
+    if (slideshowTimer) {
+        toggleSlideshowMode(false);
+    } else {
+        toggleSlideshowMode(true);
+    }
+}
+
+// 顯示載入指示器
+function showLoadingIndicator() {
+    const gallery = document.getElementById('gallery');
+    gallery.innerHTML = `
+        <div class="loading-container">
+            <div class="loading-spinner"></div>
+            <p class="loading-text">載入中...</p>
+        </div>
+    `;
+}
+
+// 顯示錯誤訊息
+function showError(message, canRetry = true) {
+    const gallery = document.getElementById('gallery');
+    gallery.innerHTML = `
+        <div class="error-container">
+            <div class="error-icon">⚠️</div>
+            <p class="error-message">${message}</p>
+            ${canRetry ? '<button class="retry-btn" onclick="location.reload()">重新載入</button>' : ''}
+        </div>
+    `;
+}
+
+// 檢查並更新 API rate limit
+function checkRateLimit(headers) {
+    if (headers) {
+        cache.rateLimit.remaining = parseInt(headers.get('X-RateLimit-Remaining'));
+        cache.rateLimit.limit = parseInt(headers.get('X-RateLimit-Limit'));
+        cache.rateLimit.reset = parseInt(headers.get('X-RateLimit-Reset'));
+        
+        if (cache.rateLimit.remaining !== null && cache.rateLimit.remaining <= CONFIG.rateLimitThreshold) {
+            const resetTime = new Date(cache.rateLimit.reset * 1000);
+            showRateLimitWarning(cache.rateLimit.remaining, resetTime);
+        }
+    }
+}
+
+// 顯示 rate limit 警告
+function showRateLimitWarning(remaining, resetTime) {
+    const existingWarning = document.querySelector('.rate-limit-warning');
+    if (existingWarning) existingWarning.remove();
+    
+    const warning = document.createElement('div');
+    warning.className = 'rate-limit-warning';
+    warning.innerHTML = `
+        <span>⚠️ API 請求即將達到限制 (剩餘: ${remaining})</span>
+        <span class="reset-time">重置時間: ${resetTime.toLocaleTimeString('zh-TW')}</span>
+        <button onclick="this.parentElement.remove()">×</button>
+    `;
+    document.body.appendChild(warning);
+}
+
 // 優化的圖片 IntersectionObserver（統一管理）
 const imageObserver = new IntersectionObserver((entries) => {
     entries.forEach(entry => {
@@ -46,7 +304,7 @@ const imageObserver = new IntersectionObserver((entries) => {
         }
     });
 }, { 
-    rootMargin: '100px', // 提前100px開始載入
+    rootMargin: CONFIG.imageLoadMargin,
     threshold: 0.01 
 });
 
@@ -68,7 +326,7 @@ function createVideoThumbnail(videoUrl, photoDiv) {
                 observer.unobserve(entry.target);
             }
         });
-    }, { rootMargin: '100px' });
+    }, { rootMargin: CONFIG.imageLoadMargin });
     
     observer.observe(thumbnailContainer);
     
@@ -162,7 +420,7 @@ function closeVideoModal() {
 }
 
 // 優化的圖片載入函數（帶錯誤處理和重試）
-function loadImageWithFallback(img, jsDelivrUrl, retries = 2) {
+function loadImageWithFallback(img, jsDelivrUrl) {
     const rawUrl = jsDelivrUrl.replace('cdn.jsdelivr.net/gh', 'raw.githubusercontent.com').replace('@main', 'main');
     
     const tryLoad = (url, attempt = 0) => {
@@ -174,7 +432,7 @@ function loadImageWithFallback(img, jsDelivrUrl, retries = 2) {
                 resolve();
             };
             tempImg.onerror = () => {
-                if (attempt < retries) {
+                if (attempt < CONFIG.retryAttempts) {
                     setTimeout(() => tryLoad(url, attempt + 1), 1000 * (attempt + 1));
                 } else {
                     reject();
@@ -188,6 +446,7 @@ function loadImageWithFallback(img, jsDelivrUrl, retries = 2) {
     tryLoad(jsDelivrUrl).catch(() => tryLoad(rawUrl).catch(() => {
         console.warn('圖片載入失敗:', img.alt);
         img.style.opacity = '0.3';
+        img.parentElement.classList.add('load-error');
     }));
 }
 
@@ -199,30 +458,86 @@ async function loadImages() {
     // 檢查快取
     if (cache.mediaFiles.has(cacheKey) && 
         cache.timestamp && 
-        Date.now() - cache.timestamp < cache.CACHE_DURATION) {
+        Date.now() - cache.timestamp < CONFIG.cacheDuration) {
         renderMedia(cache.mediaFiles.get(cacheKey), path);
         return;
     }
     
-    const apiUrl = `https://api.github.com/repos/${repoOwner}/${repoName}/contents/${path}`;
+    // 顯示載入指示器
+    showLoadingIndicator();
 
     try {
-        const response = await fetch(apiUrl);
-        if (!response.ok) throw new Error('API 請求失敗');
+        let mediaFiles = [];
         
-        const data = await response.json();
-        const mediaFiles = data.filter(file => 
-            file.type === 'file' && (isImageFile(file.name) || isVideoFile(file.name))
-        );
+        if (CONFIG.useStaticIndex) {
+            // 使用靜態索引（不呼叫 API）
+            const staticIndex = await loadStaticIndex();
+            if (!staticIndex) {
+                showError('無法載入圖片索引，請確認 images-index.json 存在');
+                return;
+            }
+            
+            const files = getFilesFromStaticIndex(staticIndex, path);
+            mediaFiles = files.map(file => ({
+                type: 'file',
+                name: file.name,
+                path: file.path,
+                isVideo: file.isVideo,
+                isImage: file.isImage
+            }));
+            
+        } else {
+            // 使用 API（原始方法）
+            const apiUrl = `https://api.github.com/repos/${CONFIG.repoOwner}/${CONFIG.repoName}/contents/${path}`;
+            const response = await fetch(apiUrl);
+            
+            // 檢查 rate limit
+            checkRateLimit(response.headers);
+            
+            if (!response.ok) {
+                const errorData = await response.json().catch(() => ({}));
+                let errorMessage = '載入失敗';
+                
+                switch (response.status) {
+                    case 403:
+                        errorMessage = 'API 請求次數已達上限，請稍後再試';
+                        break;
+                    case 404:
+                        errorMessage = '找不到此相簿';
+                        break;
+                    case 500:
+                    case 502:
+                    case 503:
+                        errorMessage = 'GitHub 伺服器暫時無法回應';
+                        break;
+                    default:
+                        errorMessage = errorData.message || '載入失敗，請重新整理頁面';
+                }
+                
+                showError(errorMessage);
+                return;
+            }
+            
+            const data = await response.json();
+            mediaFiles = data.filter(file => 
+                file.type === 'file' && (isImageFile(file.name) || isVideoFile(file.name))
+            );
+        }
+        
+        if (mediaFiles.length === 0) {
+            showError('此相簿沒有任何照片或影片', false);
+            return;
+        }
         
         // 存入快取
         cache.mediaFiles.set(cacheKey, mediaFiles);
         cache.timestamp = Date.now();
+        currentMediaFiles = mediaFiles;
         
         renderMedia(mediaFiles, path);
     } catch (error) {
         console.error('Error loading media files:', error);
-        document.getElementById('gallery').innerHTML = '<p style="color:#999;text-align:center">載入失敗,請重新整理頁面</p>';
+        showError('載入失敗，請重試');
     }
 }
 
@@ -232,11 +547,16 @@ function renderMedia(files, path) {
     gallery.innerHTML = '';
     const fragment = document.createDocumentFragment();
 
-    files.forEach(file => {
+    // 計算圖片的實際索引（排除影片）
+    let imageIndex = 0;
+
+    files.forEach((file, index) => {
         const photoDiv = document.createElement('div');
         photoDiv.classList.add('photo');
+        photoDiv.setAttribute('role', 'button');
+        photoDiv.setAttribute('tabindex', '0');
 
-        const jsDelivrUrl = `https://cdn.jsdelivr.net/gh/${repoOwner}/${repoName}@main/${path}/${file.name}`;
+        const jsDelivrUrl = `https://cdn.jsdelivr.net/gh/${CONFIG.repoOwner}/${CONFIG.repoName}@main/${path}/${file.name}`;
 
         if (isVideoFile(file.name)) {
             // 處理影片
@@ -245,26 +565,47 @@ function renderMedia(files, path) {
 
             const playIcon = document.createElement('div');
             playIcon.classList.add('play-icon');
+            playIcon.setAttribute('aria-hidden', 'true');
             photoDiv.appendChild(playIcon);
 
             const mediaType = document.createElement('div');
             mediaType.className = 'media-type video';
             mediaType.textContent = 'VIDEO';
+            mediaType.setAttribute('aria-hidden', 'true');
             photoDiv.appendChild(mediaType);
 
+            photoDiv.setAttribute('aria-label', `播放影片：${file.name}`);
             photoDiv.addEventListener('click', () => openVideoModal(jsDelivrUrl));
+            photoDiv.addEventListener('keypress', (e) => {
+                if (e.key === 'Enter' || e.key === ' ') {
+                    e.preventDefault();
+                    openVideoModal(jsDelivrUrl);
+                }
+            });
 
         } else {
             // 處理圖片（延遲載入）
+            const currentImageIndex = imageIndex++;
             const img = document.createElement('img');
-            img.alt = file.name;
+            img.alt = `相片：${file.name.replace(/\.[^/.]+$/, '').replace(/[-_]/g, ' ')}`;
             img.dataset.src = jsDelivrUrl;
+            img.dataset.index = currentImageIndex;
             img.style.cssText = 'opacity:0;transition:opacity 0.3s ease;background:#f0f0f0';
 
             const mediaType = document.createElement('div');
             mediaType.className = 'media-type photo';
             mediaType.textContent = 'PHOTO';
+            mediaType.setAttribute('aria-hidden', 'true');
             photoDiv.appendChild(mediaType);
+
+            photoDiv.setAttribute('aria-label', `查看相片：${file.name}`);
+            photoDiv.addEventListener('click', () => openImageLightbox(currentImageIndex));
+            photoDiv.addEventListener('keypress', (e) => {
+                if (e.key === 'Enter' || e.key === ' ') {
+                    e.preventDefault();
+                    openImageLightbox(currentImageIndex);
+                }
+            });
 
             // HEIC 檔案特殊處理
             if (/\.(heic|heif)$/i.test(file.name)) {
@@ -298,21 +639,96 @@ function renderMedia(files, path) {
     gallery.appendChild(fragment);
 }
 
+// 圖片燈箱功能
+function openImageLightbox(index) {
+    currentImageIndex = index;
+    const lightbox = document.getElementById('imageLightbox');
+    const lightboxImg = document.getElementById('lightboxImg');
+    const lightboxCaption = document.getElementById('lightboxCaption');
+    
+    const imageFiles = currentMediaFiles.filter(file => isImageFile(file.name));
+    if (index >= 0 && index < imageFiles.length) {
+        const file = imageFiles[index];
+        // 使用 albumPath 如果存在（隨機幻燈片），否則使用當前 folderPath
+        const path = file.albumPath || (folderPath === 'images' ? 'images' : `images/${folderPath}`);
+        const imageUrl = `https://cdn.jsdelivr.net/gh/${CONFIG.repoOwner}/${CONFIG.repoName}@main/${path}/${file.name}`;
+        
+        lightboxImg.src = imageUrl;
+        lightboxCaption.textContent = file.name;
+        lightbox.style.display = 'flex';
+        document.body.style.overflow = 'hidden';
+        
+        // 更新導航按鈕狀態
+        updateLightboxNavigation(imageFiles.length);
+    }
+}
+
+function closeLightbox() {
+    const lightbox = document.getElementById('imageLightbox');
+    lightbox.style.display = 'none';
+    document.body.style.overflow = 'auto';
+    
+    // 停止幻燈片
+    if (slideshowTimer) {
+        toggleSlideshowMode(false);
+    }
+}
+
+function navigateLightbox(direction) {
+    const imageFiles = currentMediaFiles.filter(file => isImageFile(file.name));
+    currentImageIndex += direction;
+    
+    if (currentImageIndex < 0) {
+        currentImageIndex = imageFiles.length - 1;
+    } else if (currentImageIndex >= imageFiles.length) {
+        currentImageIndex = 0;
+    }
+    
+    openImageLightbox(currentImageIndex);
+}
+
+function updateLightboxNavigation(totalImages) {
+    const counter = document.getElementById('lightboxCounter');
+    const imageFiles = currentMediaFiles.filter(file => isImageFile(file.name));
+    const actualIndex = imageFiles.findIndex((f, i) => i === currentImageIndex);
+    counter.textContent = `${actualIndex + 1} / ${totalImages}`;
+}
+
 // 優化的相簿列表載入（使用快取）
 async function loadAlbums() {
-    if (cache.albums && cache.timestamp && Date.now() - cache.timestamp < cache.CACHE_DURATION) {
+    if (cache.albums && cache.timestamp && Date.now() - cache.timestamp < CONFIG.cacheDuration) {
         renderAlbums(cache.albums);
         return;
     }
-    
-    const apiUrl = `https://api.github.com/repos/${repoOwner}/${repoName}/contents/images`;
 
     try {
-        const response = await fetch(apiUrl);
-        const data = await response.json();
-        cache.albums = data;
+        let albums = [];
+        
+        if (CONFIG.useStaticIndex) {
+            // 使用靜態索引（不呼叫 API）
+            const staticIndex = await loadStaticIndex();
+            if (staticIndex) {
+                albums = getAlbumsFromStaticIndex(staticIndex);
+            }
+        } else {
+            // 使用 API（原始方法）
+            const apiUrl = `https://api.github.com/repos/${CONFIG.repoOwner}/${CONFIG.repoName}/contents/images`;
+            const response = await fetch(apiUrl);
+            
+            // 檢查 rate limit
+            checkRateLimit(response.headers);
+            
+            if (!response.ok) {
+                console.error('Failed to load albums');
+                return;
+            }
+            
+            albums = await response.json();
+        }
+        
+        cache.albums = albums;
         cache.timestamp = Date.now();
-        renderAlbums(data);
+        renderAlbums(albums);
     } catch (error) {
         console.error('Error loading albums:', error);
     }
@@ -327,6 +743,17 @@ function renderAlbums(data) {
     homeLink.textContent = "Home";
     homeLink.onclick = () => loadAlbum('images');
     albumList.appendChild(homeLink);
+    
+    // 加入隨機幻燈片選項
+    const slideshowLink = document.createElement('a');
+    slideshowLink.href = '#';
+    slideshowLink.textContent = "🎬 隨機幻燈片";
+    slideshowLink.style.cssText = 'background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white;';
+    slideshowLink.onclick = (e) => {
+        e.preventDefault();
+        loadRandomSlideshow();
+    };
+    albumList.appendChild(slideshowLink);
     
     data.forEach(item => {
         if (item.type === 'dir') {
@@ -349,17 +776,22 @@ function renderAlbums(data) {
 function toggleSidebar() {
     const sidebar = document.getElementById('sidebar');
     const button = document.getElementById('toggleBtn');
+    const isOpen = sidebar.style.left === '0px';
 
-    if (sidebar.style.left === '0px') {
+    if (isOpen) {
         sidebar.style.left = '-250px';
         sidebar.classList.add('hide');
         button.innerHTML = '&#x3E;';
         button.style.left = '20px';
+        button.setAttribute('aria-label', '開啟選單');
+        button.setAttribute('aria-expanded', 'false');
     } else {
         sidebar.style.left = '0px';
         sidebar.classList.remove('hide');
         button.innerHTML = '&#x3C;';
         button.style.left = '230px';
+        button.setAttribute('aria-label', '關閉選單');
+        button.setAttribute('aria-expanded', 'true');
     }
 }
 
@@ -369,29 +801,57 @@ window.addEventListener('hashchange', () => {
     loadAlbum(albumName, false); // false 表示不要再次更新 URL
 });
 
-// 事件監聽器設置
+// 統一的事件監聽器設置
 document.addEventListener('DOMContentLoaded', () => {
-    const modal = document.getElementById('videoModal');
-    const closeBtn = document.querySelector('.close');
+    // 影片彈窗事件
+    const videoModal = document.getElementById('videoModal');
+    const videoCloseBtn = videoModal?.querySelector('.close');
 
-    closeBtn?.addEventListener('click', closeVideoModal);
-    modal?.addEventListener('click', (e) => {
-        if (e.target === modal) closeVideoModal();
+    videoCloseBtn?.addEventListener('click', closeVideoModal);
+    videoModal?.addEventListener('click', (e) => {
+        if (e.target === videoModal) closeVideoModal();
     });
 
-    document.addEventListener('keydown', (e) => {
-        if (e.key === 'Escape') closeVideoModal();
-    });
-});
+    // 圖片燈箱事件
+    const imageLightbox = document.getElementById('imageLightbox');
+    const lightboxClose = document.getElementById('lightboxClose');
+    const lightboxPrev = document.getElementById('lightboxPrev');
+    const lightboxNext = document.getElementById('lightboxNext');
 
-// 頁面載入完成後執行
-window.onload = () => {
-    loadAlbums();
+    lightboxClose?.addEventListener('click', closeLightbox);
+    lightboxPrev?.addEventListener('click', () => navigateLightbox(-1));
+    lightboxNext?.addEventListener('click', () => navigateLightbox(1));
     
-    // 從 URL 讀取相簿名稱並載入
+    imageLightbox?.addEventListener('click', (e) => {
+        if (e.target === imageLightbox) closeLightbox();
+    });
+
+    // 鍵盤導航
+    document.addEventListener('keydown', (e) => {
+        const videoModalOpen = videoModal?.style.display === 'block';
+        const lightboxOpen = imageLightbox?.style.display === 'flex';
+        
+        if (e.key === 'Escape') {
+            if (videoModalOpen) closeVideoModal();
+            if (lightboxOpen) closeLightbox();
+        }
+        
+        if (lightboxOpen) {
+            if (e.key === 'ArrowLeft') {
+                e.preventDefault();
+                navigateLightbox(-1);
+            } else if (e.key === 'ArrowRight') {
+                e.preventDefault();
+                navigateLightbox(1);
+            }
+        }
+    });
+
+    // 初始化頁面
+    loadAlbums();
     const albumName = getAlbumFromUrl();
     loadAlbum(albumName, false);
-};
+});
 
 // YouTube Player 設定
 let player;
