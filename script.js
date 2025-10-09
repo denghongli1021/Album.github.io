@@ -7,7 +7,8 @@ const CONFIG = {
     imageLoadMargin: '100px',
     rateLimitThreshold: 10, // 當剩餘請求數低於此值時顯示警告
     slideshowInterval: 3000, // 幻燈片切換間隔（毫秒）
-    useStaticIndex: true // 使用靜態索引檔案（不呼叫 API）
+    useStaticIndex: false, // 預設使用 API，rate limit 時自動切換
+    apiRateLimitHit: false // 記錄是否已達 API 限制
 };
 
 // 全域變數
@@ -98,7 +99,7 @@ async function loadRandomSlideshow() {
     showLoadingIndicator();
     
     try {
-        if (CONFIG.useStaticIndex) {
+        if (shouldUseStaticIndex()) {
             // 使用靜態索引
             const staticIndex = await loadStaticIndex();
             if (!staticIndex) {
@@ -132,6 +133,10 @@ async function loadRandomSlideshow() {
             checkRateLimit(response.headers);
             
             if (!response.ok) {
+                // 如果是 403 錯誤，嘗試切換到靜態索引
+                if (handleApiError(null, response.status)) {
+                    return loadRandomSlideshow(); // 重試使用靜態索引
+                }
                 showError('無法載入相簿列表');
                 return;
             }
@@ -276,18 +281,52 @@ function checkRateLimit(headers) {
     }
 }
 
+// 處理 API 錯誤並自動切換到靜態索引
+function handleApiError(error, statusCode) {
+    if (statusCode === 403 && !CONFIG.apiRateLimitHit) {
+        console.log('🔄 API rate limit 達到，自動切換到靜態索引模式');
+        CONFIG.apiRateLimitHit = true;
+        
+        // 顯示通知
+        const resetTime = cache.rateLimit.reset 
+            ? new Date(cache.rateLimit.reset * 1000).toLocaleTimeString('zh-TW')
+            : '稍後';
+        
+        showRateLimitWarning(0, cache.rateLimit.reset ? new Date(cache.rateLimit.reset * 1000) : null, true);
+        
+        return true; // 表示應該重試使用靜態索引
+    }
+    return false; // 不需要重試
+}
+
+// 檢查是否應該使用靜態索引
+function shouldUseStaticIndex() {
+    return CONFIG.useStaticIndex || CONFIG.apiRateLimitHit;
+}
+
 // 顯示 rate limit 警告
-function showRateLimitWarning(remaining, resetTime) {
+function showRateLimitWarning(remaining, resetTime, switched = false) {
     const existingWarning = document.querySelector('.rate-limit-warning');
     if (existingWarning) existingWarning.remove();
     
     const warning = document.createElement('div');
     warning.className = 'rate-limit-warning';
-    warning.innerHTML = `
-        <span>⚠️ API 請求即將達到限制 (剩餘: ${remaining})</span>
-        <span class="reset-time">重置時間: ${resetTime.toLocaleTimeString('zh-TW')}</span>
-        <button onclick="this.parentElement.remove()">×</button>
-    `;
+    
+    if (switched) {
+        warning.innerHTML = `
+            <span>✅ 已自動切換到離線模式</span>
+            <span class="reset-time">API 將於 ${resetTime ? resetTime.toLocaleTimeString('zh-TW') : '稍後'} 重置</span>
+            <button onclick="this.parentElement.remove()">×</button>
+        `;
+        warning.style.backgroundColor = '#4CAF50';
+    } else {
+        warning.innerHTML = `
+            <span>⚠️ API 請求即將達到限制 (剩餘: ${remaining})</span>
+            <span class="reset-time">重置時間: ${resetTime ? resetTime.toLocaleTimeString('zh-TW') : '未知'}</span>
+            <button onclick="this.parentElement.remove()">×</button>
+        `;
+    }
+    
     document.body.appendChild(warning);
 }
 
@@ -469,7 +508,7 @@ async function loadImages() {
     try {
         let mediaFiles = [];
         
-        if (CONFIG.useStaticIndex) {
+        if (shouldUseStaticIndex()) {
             // 使用靜態索引（不呼叫 API）
             const staticIndex = await loadStaticIndex();
             if (!staticIndex) {
@@ -495,12 +534,17 @@ async function loadImages() {
             checkRateLimit(response.headers);
             
             if (!response.ok) {
+                // 如果是 403 錯誤，嘗試切換到靜態索引
+                if (handleApiError(null, response.status)) {
+                    return loadImages(); // 重試使用靜態索引
+                }
+                
                 const errorData = await response.json().catch(() => ({}));
                 let errorMessage = '載入失敗';
                 
                 switch (response.status) {
                     case 403:
-                        errorMessage = 'API 請求次數已達上限，請稍後再試';
+                        errorMessage = 'API 請求次數已達上限，正在切換到離線模式...';
                         break;
                     case 404:
                         errorMessage = '找不到此相簿';
@@ -704,7 +748,7 @@ async function loadAlbums() {
     try {
         let albums = [];
         
-        if (CONFIG.useStaticIndex) {
+        if (shouldUseStaticIndex()) {
             // 使用靜態索引（不呼叫 API）
             const staticIndex = await loadStaticIndex();
             if (staticIndex) {
@@ -719,6 +763,10 @@ async function loadAlbums() {
             checkRateLimit(response.headers);
             
             if (!response.ok) {
+                // 如果是 403 錯誤，嘗試切換到靜態索引
+                if (handleApiError(null, response.status)) {
+                    return loadAlbums(); // 重試使用靜態索引
+                }
                 console.error('Failed to load albums');
                 return;
             }
