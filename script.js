@@ -61,6 +61,18 @@ async function loadStaticIndex() {
             throw new Error('Failed to load images-index.json');
         }
         const data = await response.json();
+        
+        // 檢查索引是否有效
+        if (!data.items || data.items.length === 0) {
+            console.warn('⚠️ images-index.json 是空的，需要執行 GitHub Actions 生成');
+            
+            // 如果是因為 API 限制而切換到靜態模式，但索引是空的
+            if (CONFIG.apiRateLimitHit) {
+                showError('靜態索引尚未生成。請前往 GitHub Actions 手動執行 "Generate Images List" workflow。', false);
+            }
+            return null;
+        }
+        
         cache.staticIndex = data;
         return data;
     } catch (error) {
@@ -276,7 +288,9 @@ function checkRateLimit(headers) {
         
         if (cache.rateLimit.remaining !== null && cache.rateLimit.remaining <= CONFIG.rateLimitThreshold) {
             const resetTime = new Date(cache.rateLimit.reset * 1000);
-            showRateLimitWarning(cache.rateLimit.remaining, resetTime);
+            // 只在 Console 顯示警告
+            console.warn(`⚠️ API 請求即將達到限制 (剩餘: ${cache.rateLimit.remaining})`);
+            console.warn(`⏰ 重置時間: ${resetTime.toLocaleString('zh-TW')}`);
         }
     }
 }
@@ -287,12 +301,11 @@ function handleApiError(error, statusCode) {
         console.log('🔄 API rate limit 達到，自動切換到靜態索引模式');
         CONFIG.apiRateLimitHit = true;
         
-        // 顯示通知
+        // 只在 Console 顯示通知
         const resetTime = cache.rateLimit.reset 
-            ? new Date(cache.rateLimit.reset * 1000).toLocaleTimeString('zh-TW')
+            ? new Date(cache.rateLimit.reset * 1000).toLocaleString('zh-TW')
             : '稍後';
-        
-        showRateLimitWarning(0, cache.rateLimit.reset ? new Date(cache.rateLimit.reset * 1000) : null, true);
+        console.info(`✅ 已自動切換到離線模式，API 將於 ${resetTime} 重置`);
         
         return true; // 表示應該重試使用靜態索引
     }
@@ -304,31 +317,7 @@ function shouldUseStaticIndex() {
     return CONFIG.useStaticIndex || CONFIG.apiRateLimitHit;
 }
 
-// 顯示 rate limit 警告
-function showRateLimitWarning(remaining, resetTime, switched = false) {
-    const existingWarning = document.querySelector('.rate-limit-warning');
-    if (existingWarning) existingWarning.remove();
-    
-    const warning = document.createElement('div');
-    warning.className = 'rate-limit-warning';
-    
-    if (switched) {
-        warning.innerHTML = `
-            <span>✅ 已自動切換到離線模式</span>
-            <span class="reset-time">API 將於 ${resetTime ? resetTime.toLocaleTimeString('zh-TW') : '稍後'} 重置</span>
-            <button onclick="this.parentElement.remove()">×</button>
-        `;
-        warning.style.backgroundColor = '#4CAF50';
-    } else {
-        warning.innerHTML = `
-            <span>⚠️ API 請求即將達到限制 (剩餘: ${remaining})</span>
-            <span class="reset-time">重置時間: ${resetTime ? resetTime.toLocaleTimeString('zh-TW') : '未知'}</span>
-            <button onclick="this.parentElement.remove()">×</button>
-        `;
-    }
-    
-    document.body.appendChild(warning);
-}
+// 移除頁面上的 rate limit 警告功能（改為只在 Console 顯示）
 
 // 優化的圖片 IntersectionObserver（統一管理）
 const imageObserver = new IntersectionObserver((entries) => {
@@ -753,6 +742,13 @@ async function loadAlbums() {
             const staticIndex = await loadStaticIndex();
             if (staticIndex) {
                 albums = getAlbumsFromStaticIndex(staticIndex);
+                console.log(`📁 從靜態索引載入 ${albums.length} 個相簿`);
+            } else if (!CONFIG.apiRateLimitHit) {
+                // 如果不是因為 API 限制，而是手動設定使用靜態索引但索引無效
+                // 回退到 API 模式
+                console.log('🔄 靜態索引無效，回退到 API 模式');
+                CONFIG.useStaticIndex = false;
+                return loadAlbums();
             }
         } else {
             // 使用 API（原始方法）
@@ -803,21 +799,39 @@ function renderAlbums(data) {
     };
     albumList.appendChild(slideshowLink);
     
+    // 處理相簿列表
+    if (!data || data.length === 0) {
+        console.warn('⚠️ 沒有相簿資料');
+        return;
+    }
+    
+    console.log(`📋 準備渲染 ${data.length} 個項目`);
+    
     data.forEach(item => {
-        if (item.type === 'dir') {
+        // 相容兩種格式：API 格式和靜態索引格式
+        const isDir = item.type === 'dir' || item.type === 'directory';
+        
+        if (isDir) {
             const albumLink = document.createElement('a');
             albumLink.href = `#${encodeURIComponent(item.name)}`;
             albumLink.textContent = item.name;
+            
+            // 特殊標題
             if (item.name === '京都X大阪X神戶') {
                 albumLink.title = '20250120-20250129';
             }
+            
             albumLink.onclick = (e) => {
                 e.preventDefault();
                 loadAlbum(item.name);
             };
+            
             albumList.appendChild(albumLink);
+            console.log(`✅ 加入相簿: ${item.name}`);
         }
     });
+    
+    console.log(`✅ 渲染完成，共 ${albumList.children.length - 2} 個相簿`); // -2 是 Home 和 Random Slideshow
 }
 
 // 側邊欄切換

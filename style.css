@@ -546,55 +546,6 @@ main {
     transform: scale(0.98);
 }
 
-/* Rate Limit 警告樣式 */
-.rate-limit-warning {
-    position: fixed;
-    top: 80px;
-    left: 50%;
-    transform: translateX(-50%);
-    background-color: #ff9800;
-    color: white;
-    padding: 12px 20px;
-    border-radius: 8px;
-    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
-    z-index: 9999;
-    display: flex;
-    align-items: center;
-    gap: 15px;
-    font-size: 14px;
-    animation: slideDown 0.3s ease;
-}
-
-@keyframes slideDown {
-    from {
-        transform: translateX(-50%) translateY(-100%);
-        opacity: 0;
-    }
-    to {
-        transform: translateX(-50%) translateY(0);
-        opacity: 1;
-    }
-}
-
-.rate-limit-warning button {
-    background: none;
-    border: none;
-    color: white;
-    font-size: 20px;
-    cursor: pointer;
-    padding: 0 5px;
-    transition: transform 0.2s ease;
-}
-
-.rate-limit-warning button:hover {
-    transform: scale(1.2);
-}
-
-.reset-time {
-    font-size: 12px;
-    opacity: 0.9;
-}
-
 .photo.load-error {
     opacity: 0.5;
     filter: grayscale(100%);
@@ -688,14 +639,6 @@ main {
     .modal-content {
         width: 95%;
         margin: 10% auto;
-    }
-
-    .rate-limit-warning {
-        flex-direction: column;
-        gap: 8px;
-        padding: 10px 15px;
-        font-size: 12px;
-        max-width: 90%;
     }
 
     .error-icon {
