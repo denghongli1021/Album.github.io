@@ -795,7 +795,7 @@ function renderAlbums(data) {
     // 加入隨機幻燈片選項
     const slideshowLink = document.createElement('a');
     slideshowLink.href = '#';
-    slideshowLink.textContent = "🎬 隨機幻燈片";
+    slideshowLink.textContent = "🎬 Random Slideshow";
     slideshowLink.style.cssText = 'background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white;';
     slideshowLink.onclick = (e) => {
         e.preventDefault();
