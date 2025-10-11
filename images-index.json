@@ -1,5 +1,5 @@
 {
-  "generated": "2025-10-09T12:40:54.150Z",
+  "generated": "2025-10-11T15:48:39.330Z",
   "baseUrl": "https://cdn.jsdelivr.net/gh/denghongli1021/Album.github.io@main",
   "items": [
     {
@@ -8702,6 +8702,13 @@
         },
         {
           "type": "file",
+          "name": "781763020.548761.mp4",
+          "path": "202510_1/781763020.548761.mp4",
+          "isVideo": true,
+          "isImage": false
+        },
+        {
+          "type": "file",
           "name": "8D1BC297-D461-4367-8250-0537D09C40CD.jpeg",
           "path": "202510_1/8D1BC297-D461-4367-8250-0537D09C40CD.jpeg",
           "isVideo": false,
@@ -9124,6 +9131,20 @@
           "type": "file",
           "name": "IMG_3825.jpeg",
           "path": "202510_1/IMG_3825.jpeg",
+          "isVideo": false,
+          "isImage": true
+        },
+        {
+          "type": "file",
+          "name": "IMG_3826.jpeg",
+          "path": "202510_1/IMG_3826.jpeg",
+          "isVideo": false,
+          "isImage": true
+        },
+        {
+          "type": "file",
+          "name": "IMG_3827.jpeg",
+          "path": "202510_1/IMG_3827.jpeg",
           "isVideo": false,
           "isImage": true
         }
