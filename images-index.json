@@ -1,5 +1,5 @@
 {
-  "generated": "2025-10-11T15:48:39.330Z",
+  "generated": "2025-10-13T06:42:37.937Z",
   "baseUrl": "https://cdn.jsdelivr.net/gh/denghongli1021/Album.github.io@main",
   "items": [
     {
@@ -9257,6 +9257,104 @@
           "type": "file",
           "name": "9ae5b083-69a6-4b01-8777-ea1011234725.jfif",
           "path": "Mydrawings/9ae5b083-69a6-4b01-8777-ea1011234725.jfif",
+          "isVideo": false,
+          "isImage": true
+        },
+        {
+          "type": "file",
+          "name": "IMG_3399.jpeg",
+          "path": "Mydrawings/IMG_3399.jpeg",
+          "isVideo": false,
+          "isImage": true
+        },
+        {
+          "type": "file",
+          "name": "IMG_3400.jpeg",
+          "path": "Mydrawings/IMG_3400.jpeg",
+          "isVideo": false,
+          "isImage": true
+        },
+        {
+          "type": "file",
+          "name": "IMG_3401.jpeg",
+          "path": "Mydrawings/IMG_3401.jpeg",
+          "isVideo": false,
+          "isImage": true
+        },
+        {
+          "type": "file",
+          "name": "IMG_3403.jpeg",
+          "path": "Mydrawings/IMG_3403.jpeg",
+          "isVideo": false,
+          "isImage": true
+        },
+        {
+          "type": "file",
+          "name": "IMG_3412.jpeg",
+          "path": "Mydrawings/IMG_3412.jpeg",
+          "isVideo": false,
+          "isImage": true
+        },
+        {
+          "type": "file",
+          "name": "IMG_3419.jpeg",
+          "path": "Mydrawings/IMG_3419.jpeg",
+          "isVideo": false,
+          "isImage": true
+        },
+        {
+          "type": "file",
+          "name": "IMG_3543.jpeg",
+          "path": "Mydrawings/IMG_3543.jpeg",
+          "isVideo": false,
+          "isImage": true
+        },
+        {
+          "type": "file",
+          "name": "IMG_3625.jpeg",
+          "path": "Mydrawings/IMG_3625.jpeg",
+          "isVideo": false,
+          "isImage": true
+        },
+        {
+          "type": "file",
+          "name": "IMG_3626.jpeg",
+          "path": "Mydrawings/IMG_3626.jpeg",
+          "isVideo": false,
+          "isImage": true
+        },
+        {
+          "type": "file",
+          "name": "IMG_3630.jpeg",
+          "path": "Mydrawings/IMG_3630.jpeg",
+          "isVideo": false,
+          "isImage": true
+        },
+        {
+          "type": "file",
+          "name": "IMG_3702.jpeg",
+          "path": "Mydrawings/IMG_3702.jpeg",
+          "isVideo": false,
+          "isImage": true
+        },
+        {
+          "type": "file",
+          "name": "IMG_3703.jpeg",
+          "path": "Mydrawings/IMG_3703.jpeg",
+          "isVideo": false,
+          "isImage": true
+        },
+        {
+          "type": "file",
+          "name": "IMG_3706.jpeg",
+          "path": "Mydrawings/IMG_3706.jpeg",
+          "isVideo": false,
+          "isImage": true
+        },
+        {
+          "type": "file",
+          "name": "IMG_3712.jpeg",
+          "path": "Mydrawings/IMG_3712.jpeg",
           "isVideo": false,
           "isImage": true
         },
