@@ -1,5 +1,5 @@
 {
-  "generated": "2025-10-17T05:28:46.200Z",
+  "generated": "2025-10-17T10:03:47.065Z",
   "baseUrl": "https://cdn.jsdelivr.net/gh/denghongli1021/Album.github.io@main",
   "items": [
     {
@@ -9347,6 +9347,62 @@
         },
         {
           "type": "file",
+          "name": "IMG_3906.jpeg",
+          "path": "202510_2/IMG_3906.jpeg",
+          "isVideo": false,
+          "isImage": true
+        },
+        {
+          "type": "file",
+          "name": "IMG_3908.jpeg",
+          "path": "202510_2/IMG_3908.jpeg",
+          "isVideo": false,
+          "isImage": true
+        },
+        {
+          "type": "file",
+          "name": "IMG_3912.jpeg",
+          "path": "202510_2/IMG_3912.jpeg",
+          "isVideo": false,
+          "isImage": true
+        },
+        {
+          "type": "file",
+          "name": "IMG_3917.jpeg",
+          "path": "202510_2/IMG_3917.jpeg",
+          "isVideo": false,
+          "isImage": true
+        },
+        {
+          "type": "file",
+          "name": "IMG_3918.jpeg",
+          "path": "202510_2/IMG_3918.jpeg",
+          "isVideo": false,
+          "isImage": true
+        },
+        {
+          "type": "file",
+          "name": "IMG_3919.jpeg",
+          "path": "202510_2/IMG_3919.jpeg",
+          "isVideo": false,
+          "isImage": true
+        },
+        {
+          "type": "file",
+          "name": "IMG_3923.jpeg",
+          "path": "202510_2/IMG_3923.jpeg",
+          "isVideo": false,
+          "isImage": true
+        },
+        {
+          "type": "file",
+          "name": "IMG_3925.jpeg",
+          "path": "202510_2/IMG_3925.jpeg",
+          "isVideo": false,
+          "isImage": true
+        },
+        {
+          "type": "file",
           "name": "image.jpg",
           "path": "202510_2/image.jpg",
           "isVideo": false,
@@ -9559,6 +9615,48 @@
           "type": "file",
           "name": "IMG_3712.jpeg",
           "path": "Mydrawings/IMG_3712.jpeg",
+          "isVideo": false,
+          "isImage": true
+        },
+        {
+          "type": "file",
+          "name": "IMG_3919.jpeg",
+          "path": "Mydrawings/IMG_3919.jpeg",
+          "isVideo": false,
+          "isImage": true
+        },
+        {
+          "type": "file",
+          "name": "IMG_3920.jpeg",
+          "path": "Mydrawings/IMG_3920.jpeg",
+          "isVideo": false,
+          "isImage": true
+        },
+        {
+          "type": "file",
+          "name": "IMG_3921.jpeg",
+          "path": "Mydrawings/IMG_3921.jpeg",
+          "isVideo": false,
+          "isImage": true
+        },
+        {
+          "type": "file",
+          "name": "IMG_3922.jpeg",
+          "path": "Mydrawings/IMG_3922.jpeg",
+          "isVideo": false,
+          "isImage": true
+        },
+        {
+          "type": "file",
+          "name": "IMG_3923.jpeg",
+          "path": "Mydrawings/IMG_3923.jpeg",
+          "isVideo": false,
+          "isImage": true
+        },
+        {
+          "type": "file",
+          "name": "IMG_3925.jpeg",
+          "path": "Mydrawings/IMG_3925.jpeg",
           "isVideo": false,
           "isImage": true
         },
