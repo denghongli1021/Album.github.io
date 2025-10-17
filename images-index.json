@@ -1,5 +1,5 @@
 {
-  "generated": "2025-10-17T10:03:47.065Z",
+  "generated": "2025-10-17T12:00:52.438Z",
   "baseUrl": "https://cdn.jsdelivr.net/gh/denghongli1021/Album.github.io@main",
   "items": [
     {
@@ -9398,6 +9398,13 @@
           "type": "file",
           "name": "IMG_3925.jpeg",
           "path": "202510_2/IMG_3925.jpeg",
+          "isVideo": false,
+          "isImage": true
+        },
+        {
+          "type": "file",
+          "name": "IMG_3926.jpeg",
+          "path": "202510_2/IMG_3926.jpeg",
           "isVideo": false,
           "isImage": true
         },
