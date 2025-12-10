@@ -1,5 +1,5 @@
 {
-  "generated": "2025-11-21T05:40:52.390Z",
+  "generated": "2025-12-10T11:11:39.676Z",
   "baseUrl": "https://cdn.jsdelivr.net/gh/denghongli1021/Album.github.io@main",
   "items": [
     {
@@ -10851,6 +10851,173 @@
           "isImage": true
         }
       ]
+    },
+    {
+      "type": "dir",
+      "name": "202511_2",
+      "path": "202511_2",
+      "files": [
+        {
+          "type": "file",
+          "name": "IMG_4207.jpeg",
+          "path": "202511_2/IMG_4207.jpeg",
+          "isVideo": false,
+          "isImage": true
+        },
+        {
+          "type": "file",
+          "name": "IMG_4208.jpeg",
+          "path": "202511_2/IMG_4208.jpeg",
+          "isVideo": false,
+          "isImage": true
+        },
+        {
+          "type": "file",
+          "name": "IMG_4209.jpeg",
+          "path": "202511_2/IMG_4209.jpeg",
+          "isVideo": false,
+          "isImage": true
+        },
+        {
+          "type": "file",
+          "name": "IMG_4214.jpeg",
+          "path": "202511_2/IMG_4214.jpeg",
+          "isVideo": false,
+          "isImage": true
+        },
+        {
+          "type": "file",
+          "name": "IMG_4218.jpeg",
+          "path": "202511_2/IMG_4218.jpeg",
+          "isVideo": false,
+          "isImage": true
+        },
+        {
+          "type": "file",
+          "name": "IMG_4244.jpeg",
+          "path": "202511_2/IMG_4244.jpeg",
+          "isVideo": false,
+          "isImage": true
+        },
+        {
+          "type": "file",
+          "name": "IMG_4245.jpeg",
+          "path": "202511_2/IMG_4245.jpeg",
+          "isVideo": false,
+          "isImage": true
+        },
+        {
+          "type": "file",
+          "name": "IMG_4251.jpeg",
+          "path": "202511_2/IMG_4251.jpeg",
+          "isVideo": false,
+          "isImage": true
+        },
+        {
+          "type": "file",
+          "name": "IMG_4253.jpeg",
+          "path": "202511_2/IMG_4253.jpeg",
+          "isVideo": false,
+          "isImage": true
+        },
+        {
+          "type": "file",
+          "name": "IMG_4254.jpeg",
+          "path": "202511_2/IMG_4254.jpeg",
+          "isVideo": false,
+          "isImage": true
+        },
+        {
+          "type": "file",
+          "name": "IMG_4255.jpeg",
+          "path": "202511_2/IMG_4255.jpeg",
+          "isVideo": false,
+          "isImage": true
+        },
+        {
+          "type": "file",
+          "name": "IMG_4256.jpeg",
+          "path": "202511_2/IMG_4256.jpeg",
+          "isVideo": false,
+          "isImage": true
+        },
+        {
+          "type": "file",
+          "name": "IMG_4270.jpeg",
+          "path": "202511_2/IMG_4270.jpeg",
+          "isVideo": false,
+          "isImage": true
+        },
+        {
+          "type": "file",
+          "name": "IMG_4310.jpeg",
+          "path": "202511_2/IMG_4310.jpeg",
+          "isVideo": false,
+          "isImage": true
+        },
+        {
+          "type": "file",
+          "name": "IMG_4318.jpeg",
+          "path": "202511_2/IMG_4318.jpeg",
+          "isVideo": false,
+          "isImage": true
+        },
+        {
+          "type": "file",
+          "name": "IMG_4323.jpeg",
+          "path": "202511_2/IMG_4323.jpeg",
+          "isVideo": false,
+          "isImage": true
+        },
+        {
+          "type": "file",
+          "name": "IMG_4324.jpeg",
+          "path": "202511_2/IMG_4324.jpeg",
+          "isVideo": false,
+          "isImage": true
+        },
+        {
+          "type": "file",
+          "name": "IMG_4326.jpeg",
+          "path": "202511_2/IMG_4326.jpeg",
+          "isVideo": false,
+          "isImage": true
+        },
+        {
+          "type": "file",
+          "name": "IMG_4328.jpeg",
+          "path": "202511_2/IMG_4328.jpeg",
+          "isVideo": false,
+          "isImage": true
+        },
+        {
+          "type": "file",
+          "name": "IMG_4329.jpeg",
+          "path": "202511_2/IMG_4329.jpeg",
+          "isVideo": false,
+          "isImage": true
+        },
+        {
+          "type": "file",
+          "name": "IMG_4332.jpeg",
+          "path": "202511_2/IMG_4332.jpeg",
+          "isVideo": false,
+          "isImage": true
+        },
+        {
+          "type": "file",
+          "name": "c26cd90511a2cd2f52010517e94aa230.jpeg",
+          "path": "202511_2/c26cd90511a2cd2f52010517e94aa230.jpeg",
+          "isVideo": false,
+          "isImage": true
+        }
+      ]
+    },
+    {
+      "type": "dir",
+      "name": "202512",
+      "path": "202512",
+      "files": []
     },
     {
       "type": "file",
