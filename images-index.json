@@ -1,5 +1,5 @@
 {
-  "generated": "2026-01-02T10:08:18.528Z",
+  "generated": "2026-01-04T06:39:46.389Z",
   "baseUrl": "https://cdn.jsdelivr.net/gh/denghongli1021/Album.github.io@main",
   "items": [
     {
@@ -11425,6 +11425,12 @@
           "isImage": true
         }
       ]
+    },
+    {
+      "type": "dir",
+      "name": "202601",
+      "path": "202601",
+      "files": []
     },
     {
       "type": "file",
